@@ -208,3 +208,7 @@ Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server ein
 - Plugin: Jellyfin 12.2 oder neuer
 - App ohne Plugin: Jellyfin 10.8 oder neuer
 - Ein steuerbarer Client auf dem Zielgerät (z. B. Jellyfin für Android TV, Jellyfin Web im Browser des Fernsehers, Jellyfin Media Player)
+
+## Lizenz
+
+Dieses Projekt steht unter der [GNU General Public License v3.0](LICENSE) (GPL-3.0).
