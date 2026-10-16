@@ -139,7 +139,8 @@ public sealed class WebClientInjectionMiddleware
 
             // Das Skript läuft immer (automatische Anmeldung, Suche auf dem Fernseher);
             // das Kopfzeilen-Symbol wird per Parameter ein- oder ausgeschaltet.
-            var scriptTag = $"<script src=\"{ScriptPath}?header={(showHeaderButton ? 1 : 0)}\"></script>";
+            var diagnostics = Plugin.Instance?.Configuration.EnableDiagnostics == true;
+            var scriptTag = $"<script src=\"{ScriptPath}?header={(showHeaderButton ? 1 : 0)}&diag={(diagnostics ? 1 : 0)}\"></script>";
             var injected = html.Insert(index + "<head>".Length, scriptTag);
             await WriteAsync(context, injected, "text/html; charset=utf-8").ConfigureAwait(false);
             return true;

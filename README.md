@@ -171,6 +171,14 @@ Nach Änderungen an den App-Dateien die Konstante `CACHE_NAME` in `app/service-w
 
 Da Jellyfin bei jeder Neuverbindung eines Clients eine neue Sitzungs-ID vergibt, merkt sich die App die **Geräte-ID** des Zielgeräts und ermittelt die aktuelle Sitzung automatisch neu.
 
+## Steuerkreuz im Browser
+
+Steuert die Fernbedienung den Jellyfin-Web-Client (z. B. Chrome am Fernseher oder PC), übernimmt das Plugin im normalen Layout die Pfeiltasten selbst: Ein Druck wählt die nächste Kachel, Reihen-Überschriften und Zusatzknöpfe werden übersprungen, und ein deutlicher Rahmen zeigt die Auswahl. Im **TV-Layout** (Jellyfin → Einstellungen → Anzeige → Layout), während der Wiedergabe und in Dialogen bleibt die Navigation beim Web-Client.
+
+## Diagnoseprotokoll
+
+Unter **Dashboard → Plugins → Jellyfin Remote → Fehlersuche** lässt sich ein Diagnoseprotokoll einschalten. Es zeichnet gesendete Befehle der Fernbedienung (mit Antwortzeit) und auf den gesteuerten Geräten empfangene Befehle samt ausgewähltem Element auf. Das Protokoll erscheint auf derselben Seite und lässt sich kopieren; es liegt nur im Arbeitsspeicher. Nach dem Einschalten Fernbedienung und gesteuerte Jellyfin-Fenster einmal neu laden.
+
 ## Gerät „nicht steuerbar“?
 
 Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server eine Live-Verbindung (**WebSocket**) besteht. Die Fernbedienung prüft das selbst und zeigt einen Hinweis an, wenn kein Gerät steuerbar ist:

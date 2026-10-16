@@ -10,6 +10,7 @@ import { initSetupView } from './views/setup.js';
 import { initSessionsView } from './views/sessions.js';
 import { initRemoteView } from './views/remote.js';
 import { initSearchView } from './views/search.js';
+import { initDiagnostics } from './diagnostics.js';
 
 /** Ansichten, in denen Kopfzeile bzw. Tab-Leiste sichtbar sind. */
 const WITH_TOPBAR = ['sessions', 'remote', 'search'];
@@ -41,6 +42,7 @@ const app = {
 
     this.config = saveConfig(credentials);
     this.api = createApi(credentials.serverUrl, credentials.token);
+    initDiagnostics(this.api);
   },
 
   /** Meldet ab, entfernt alle gespeicherten Daten und kehrt zur Einrichtung zurück. */
@@ -232,6 +234,7 @@ function init() {
   const { serverUrl, token, targetDeviceId, targetSessionId, targetName } = app.config;
   if (serverUrl && token) {
     app.api = createApi(serverUrl, token);
+    initDiagnostics(app.api);
     if (targetDeviceId || targetSessionId) {
       app.session = { Id: targetSessionId, DeviceId: targetDeviceId, DeviceName: targetName };
     }

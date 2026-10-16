@@ -115,6 +115,7 @@ public class RemoteController : ControllerBase
             ServerName = _applicationHost.FriendlyName,
             AppPath = "remote/",
             PublicUrl = string.IsNullOrWhiteSpace(config?.PublicUrl) ? null : config.PublicUrl.TrimEnd('/'),
+            Diagnostics = config?.EnableDiagnostics ?? false,
         };
     }
 

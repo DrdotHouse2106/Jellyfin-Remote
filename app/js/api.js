@@ -1,4 +1,5 @@
 import { APP_VERSION } from './version.js';
+import { log as diagnosticsLog } from './diagnostics.js';
 
 /**
  * Schlanker Client für die Jellyfin-REST-API.
@@ -93,6 +94,7 @@ export class JellyfinApi {
     const headers = { Authorization: this.authHeader, Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
 
+    const startedAt = performance.now();
     let response;
     try {
       response = await fetch(url, {
@@ -105,6 +107,11 @@ export class JellyfinApi {
     } catch (err) {
       if (err.name === 'AbortError') throw err;
       throw new ApiError(networkMessage(this.serverUrl));
+    }
+
+    // Diagnose: Befehle protokollieren (ohne die ständige Abfrage der Sitzungen und das Protokoll selbst).
+    if (method !== 'GET' && !path.startsWith('/JellyfinRemote/Diagnostics')) {
+      diagnosticsLog(`${method} ${path.replace(/[0-9a-f]{32}/g, '…')}${url.search} → ${response.status} (${Math.round(performance.now() - startedAt)} ms)`);
     }
 
     if (!response.ok) {

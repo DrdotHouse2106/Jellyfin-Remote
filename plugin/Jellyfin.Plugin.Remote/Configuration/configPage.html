@@ -63,10 +63,37 @@
                         </div>
                     </div>
 
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Fehlersuche</h3>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="jfrEnableDiagnostics" type="checkbox" is="emby-checkbox">
+                                <span>Diagnoseprotokoll</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Protokolliert gesendete Befehle der Fernbedienung (mit Antwortzeit) und auf den gesteuerten
+                                Geräten empfangene Befehle mit dem jeweils ausgewählten Element. Nach dem Einschalten die
+                                Fernbedienung und die gesteuerten Jellyfin-Fenster einmal neu laden. Das Protokoll liegt nur im
+                                Arbeitsspeicher und ist nach einem Neustart leer.
+                            </div>
+                        </div>
+                    </div>
+
                     <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                         <span>Speichern</span>
                     </button>
                 </form>
+
+                <div class="verticalSection" id="jfrDiagnosticsSection" style="margin-top: 2em;" hidden>
+                    <h3 class="sectionTitle">Diagnoseprotokoll</h3>
+                    <div style="display: flex; gap: .5em; flex-wrap: wrap; margin-bottom: .5em;">
+                        <button is="emby-button" type="button" class="raised emby-button" id="jfrDiagRefresh"><span>Aktualisieren</span></button>
+                        <button is="emby-button" type="button" class="raised emby-button" id="jfrDiagCopy"><span>Kopieren</span></button>
+                        <button is="emby-button" type="button" class="raised emby-button" id="jfrDiagClear"><span>Leeren</span></button>
+                    </div>
+                    <textarea id="jfrDiagLog" readonly spellcheck="false"
+                              style="width: 100%; height: 24em; box-sizing: border-box; font: 12px/1.4 monospace; background: rgba(0,0,0,.3); color: inherit; border: 1px solid rgba(255,255,255,.15); border-radius: 6px; padding: .6em;"></textarea>
+                </div>
 
                 <div class="verticalSection" style="margin-top: 2em;">
                     <h3 class="sectionTitle">Mit dem Smartphone verbinden</h3>
@@ -119,7 +146,32 @@
                     target.title = text;
                 }
 
+                function loadDiagnostics() {
+                    var box = page.querySelector('#jfrDiagLog');
+                    return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('JellyfinRemote/Diagnostics'), dataType: 'text' })
+                        .then(function (text) {
+                            box.value = text || '(noch keine Einträge)';
+                            box.scrollTop = box.scrollHeight;
+                        })
+                        .catch(function () { box.value = 'Protokoll konnte nicht geladen werden.'; });
+                }
+
+                page.querySelector('#jfrDiagRefresh').addEventListener('click', loadDiagnostics);
+                page.querySelector('#jfrDiagCopy').addEventListener('click', function () {
+                    var box = page.querySelector('#jfrDiagLog');
+                    box.select();
+                    (navigator.clipboard ? navigator.clipboard.writeText(box.value) : Promise.reject())
+                        .catch(function () { document.execCommand('copy'); })
+                        .then(function () { Dashboard.alert('Protokoll kopiert.'); });
+                });
+                page.querySelector('#jfrDiagClear').addEventListener('click', function () {
+                    ApiClient.ajax({ type: 'DELETE', url: ApiClient.getUrl('JellyfinRemote/Diagnostics') }).then(loadDiagnostics);
+                });
+
                 function render(config) {
+                    page.querySelector('#jfrDiagnosticsSection').hidden = !config.EnableDiagnostics;
+                    if (config.EnableDiagnostics) loadDiagnostics();
+
                     var base = serverUrl(config);
                     var appUrl = base + '/remote/';
                     var link = page.querySelector('#jfrAppLink');
@@ -142,6 +194,7 @@
                         page.querySelector('#jfrShowHeaderButton').checked = config.ShowHeaderButton;
                         page.querySelector('#jfrMenuLinkName').value = config.MenuLinkName || '';
                         page.querySelector('#jfrPublicUrl').value = config.PublicUrl || '';
+                        page.querySelector('#jfrEnableDiagnostics').checked = config.EnableDiagnostics;
                         render(config);
                         Dashboard.hideLoadingMsg();
                     });
@@ -155,6 +208,7 @@
                         config.ShowHeaderButton = page.querySelector('#jfrShowHeaderButton').checked;
                         config.MenuLinkName = page.querySelector('#jfrMenuLinkName').value.trim();
                         config.PublicUrl = page.querySelector('#jfrPublicUrl').value.trim();
+                        config.EnableDiagnostics = page.querySelector('#jfrEnableDiagnostics').checked;
                         return ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             render(config);
                             Dashboard.processPluginConfigurationUpdateResult(result);

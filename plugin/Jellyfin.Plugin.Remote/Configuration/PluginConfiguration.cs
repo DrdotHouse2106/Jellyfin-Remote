@@ -22,4 +22,10 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Leer = Adresse, unter der das Dashboard gerade aufgerufen wird.
     /// </summary>
     public string PublicUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether das Diagnoseprotokoll aktiv ist. Fernbedienung und
+    /// Web-Client protokollieren dann Befehle und Fokuswechsel (Ansicht in den Plugin-Einstellungen).
+    /// </summary>
+    public bool EnableDiagnostics { get; set; }
 }

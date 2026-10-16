@@ -3,6 +3,14 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.2.1
+
+- Steuerkreuz im Jellyfin-Web-Client (Browser, normales Layout) zuverlässig: ein Druck = eine Kachel, Reihen-Überschriften und Zusatzknöpfe werden übersprungen, die Auswahl startet im Seiteninhalt statt in der oberen Leiste
+- Funktioniert auch nach einem Seitenwechsel ohne Neuladen (Fokus lag vorher auf der unsichtbaren alten Seite)
+- Deutlicher Rahmen um das ausgewählte Element, solange per Fernbedienung gesteuert wird
+- Im TV-Layout, während der Wiedergabe und in Dialogen bleibt die Navigation wie bisher beim Web-Client
+- Diagnoseprotokoll (Plugin-Einstellungen → Fehlersuche): protokolliert gesendete und empfangene Befehle sowie Fokuswechsel, mit Knopf zum Kopieren
+
 ## 1.2.0
 
 - Suche auf dem Fernseher: Der Suchbegriff wird live an das Zielgerät übertragen, die Ergebnisse erscheinen dort; auf dem Handy bleibt ein kleines Steuerkreuz zum Auswählen (abschaltbar über den Schalter in der Suche)

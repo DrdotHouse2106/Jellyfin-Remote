@@ -16,4 +16,7 @@ public class RemotePluginInfo
 
     /// <summary>Gets or sets die konfigurierte öffentliche Server-Adresse (oder null).</summary>
     public string? PublicUrl { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether das Diagnoseprotokoll eingeschaltet ist.</summary>
+    public bool Diagnostics { get; set; }
 }
