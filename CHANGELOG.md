@@ -3,6 +3,11 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.0
+
+- Neuer Reiter **Menü**: Startseite, Suche, Einstellungen und alle Bibliotheken (Filme, Serien, Live-TV …) mit einem Tipp auf dem Fernseher öffnen
+- Mit der TV-App „Heimkino TV“ (Android TV / Fire TV): TV-Programm, Aufnahmen und Zeitplan öffnen, **Apps des Fernsehers starten** (Netflix, YouTube, Mediatheken …) und **Einstellungen des Fernsehers** öffnen (WLAN, Bluetooth, Bild, Ton)
+
 ## 1.2.1
 
 - Steuerkreuz im Jellyfin-Web-Client (Browser, normales Layout) zuverlässig: ein Druck = eine Kachel, Reihen-Überschriften und Zusatzknöpfe werden übersprungen, die Auswahl startet im Seiteninhalt statt in der oberen Leiste

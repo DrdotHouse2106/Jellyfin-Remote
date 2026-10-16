@@ -253,6 +253,21 @@ export class JellyfinApi {
     return `${this.serverUrl}/Items/${id}/Images/Primary?${params}`;
   }
 
+  /** Bibliotheken des Benutzers (Filme, Serien, Live-TV, …). */
+  getUserViews(userId) {
+    return this.request('/UserViews', { query: { userId } });
+  }
+
+  /**
+   * Apps und Einstellungen eines Fernsehers mit „Heimkino TV“. Die TV-App legt sie in den
+   * Anzeige-Einstellungen ab (CustomPrefs: apps als JSON, settings als Liste).
+   */
+  getTvClientDevice(deviceId, userId) {
+    return this.request(`/DisplayPreferences/${encodeURIComponent(`tvclient-device-${deviceId}`)}`, {
+      query: { client: 'tvclient', userId },
+    });
+  }
+
   // ---------- Fernsteuerung ----------
 
   /** Startet ein Element sofort auf dem Zielgerät (PlayCommand=PlayNow). */

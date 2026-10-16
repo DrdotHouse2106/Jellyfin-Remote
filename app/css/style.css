@@ -419,6 +419,15 @@ p { margin: 0; }
 }
 .key:active { transform: scale(0.95); background: var(--surface-3); color: var(--text); }
 
+/* ---------- Menü ---------- */
+.menu-section { display: flex; flex-direction: column; gap: 10px; }
+.menu-section + .menu-section { margin-top: 18px; }
+.menu-section__title { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.menu-tile { min-height: 76px; padding: 8px 6px; color: var(--text); }
+.menu-tile__icon { color: var(--accent); }
+.menu-tile__label { font-size: 0.78rem; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+
 /* ---------- Wiedergabe ---------- */
 .transport { display: flex; align-items: center; justify-content: center; gap: 18px; }
 .transport__btn {

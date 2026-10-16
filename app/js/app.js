@@ -10,11 +10,12 @@ import { initSetupView } from './views/setup.js';
 import { initSessionsView } from './views/sessions.js';
 import { initRemoteView } from './views/remote.js';
 import { initSearchView } from './views/search.js';
+import { initMenuView } from './views/menu.js';
 import { initDiagnostics } from './diagnostics.js';
 
 /** Ansichten, in denen Kopfzeile bzw. Tab-Leiste sichtbar sind. */
-const WITH_TOPBAR = ['sessions', 'remote', 'search'];
-const WITH_TABBAR = ['remote', 'search'];
+const WITH_TOPBAR = ['sessions', 'remote', 'menu', 'search'];
+const WITH_TABBAR = ['remote', 'menu', 'search'];
 
 const app = {
   config: loadConfig(),
@@ -213,6 +214,7 @@ function init() {
     setup: initSetupView(app),
     sessions: initSessionsView(app),
     remote: initRemoteView(app),
+    menu: initMenuView(app),
     search: initSearchView(app),
   };
 

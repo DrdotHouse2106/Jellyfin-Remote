@@ -26,6 +26,7 @@ const APP_SHELL = [
   './js/views/setup.js',
   './js/views/sessions.js',
   './js/views/remote.js',
+  './js/views/menu.js',
   './js/views/search.js',
   './icons/icon.svg',
   './icons/icon-192.png',
