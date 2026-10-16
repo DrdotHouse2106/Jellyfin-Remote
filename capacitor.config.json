@@ -1,5 +1,5 @@
 {
-  "appId": "me.ulber.jellyfinremote",
+  "appId": "com.example.jellyfinremote",
   "appName": "Jellyfin Remote",
   "webDir": "app",
   "backgroundColor": "#0b0d12",

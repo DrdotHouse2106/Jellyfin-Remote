@@ -29,7 +29,7 @@ const urlTypes = `
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>me.ulber.jellyfinremote</string>
+			<string>com.example.jellyfinremote</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>${SCHEME}</string>

@@ -44,7 +44,7 @@ Die App lässt sich auf drei Arten nutzen:
 
 ## Jellyfin-Plugin
 
-Das Plugin enthält die komplette App und liefert sie direkt über Jellyfin aus – unter derselben Adresse wie dein Server, z. B. `https://jellyfin.ulber.me/remote/`. Da Jellyfin selbst die Dateien ausliefert, brauchst du weder Docker noch eine Änderung am Reverse-Proxy.
+Das Plugin enthält die komplette App und liefert sie direkt über Jellyfin aus – unter derselben Adresse wie dein Server, z. B. `https://jellyfin.example.de/remote/`. Da Jellyfin selbst die Dateien ausliefert, brauchst du weder Docker noch eine Änderung am Reverse-Proxy.
 
 **Voraussetzung:** Jellyfin **12.2** oder neuer.
 
@@ -66,7 +66,7 @@ Updates erscheinen danach automatisch im Dashboard.
 - **Einstellungsseite** (Dashboard → Plugins → Jellyfin Remote, oder im Dashboard-Menü „Fernbedienung“) mit zwei QR-Codes:
   - **Im Browser öffnen** – öffnet die Web-App auf dem Smartphone.
   - **In der iPhone-App verbinden** – öffnet die iPhone-App und trägt die Server-URL automatisch ein.
-- **Öffentliche Adresse** – trage dort z. B. `https://jellyfin.ulber.me` ein, damit die QR-Codes auch dann stimmen, wenn du das Dashboard im Heimnetz über die IP-Adresse aufrufst.
+- **Öffentliche Adresse** – trage dort z. B. `https://jellyfin.example.de` ein, damit die QR-Codes auch dann stimmen, wenn du das Dashboard im Heimnetz über die IP-Adresse aufrufst.
 - **Info-Endpunkt** `GET /JellyfinRemote/Info` – die iPhone-App erkennt darüber, dass das Plugin installiert ist.
 
 Nach dem Ein- oder Ausschalten der Links den Web-Client neu laden (am Computer **Strg + F5**).
@@ -112,7 +112,7 @@ npm run ios:open     # öffnet das Projekt in Xcode
 In Xcode:
 
 1. Links das Projekt **App** wählen → **Signing & Capabilities** → dein **Team** (Apple-ID) auswählen.
-2. Bei Bedarf die **Bundle Identifier** anpassen (Standard: `me.ulber.jellyfinremote`, siehe `capacitor.config.json`).
+2. Bei Bedarf die **Bundle Identifier** anpassen (Standard: `com.example.jellyfinremote` – für eigene Builds auf eine eigene Kennung ändern, z. B. `de.deinname.jellyfinremote`, siehe `capacitor.config.json`).
 3. iPhone per Kabel verbinden, oben als Ziel auswählen und **▶ Run** drücken.
 4. Beim ersten Start auf dem iPhone: **Einstellungen → Allgemein → VPN und Geräteverwaltung** → Entwickler vertrauen.
 
