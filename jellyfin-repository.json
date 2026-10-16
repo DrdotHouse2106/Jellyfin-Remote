@@ -10,7 +10,7 @@
     "versions": [
       {
         "version": "1.1.4.0",
-        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.1.4",
+        "changelog": "- Updates kommen sofort an: Die App wird unter einer Adresse mit Versionsnummer ausgeliefert, damit kein Zwischenspeicher (z. B. der Jellyfin-App auf dem iPhone) noch die alte Version zeigt\n- Zurück-Link zu Jellyfin funktioniert unabhängig davon, wie die Fernbedienung geöffnet wurde",
         "targetAbi": "12.2.0.0",
         "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.1.4/jellyfin-remote_1.1.4.0.zip",
         "checksum": "f5114077c789155a3911beccae3f6b1c",
@@ -18,7 +18,7 @@
       },
       {
         "version": "1.1.3.0",
-        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.1.3",
+        "changelog": "- App-Dateien werden nicht mehr 24 Stunden im Browser zwischengespeichert\n- Offline-Speicher lädt online immer zuerst die aktuelle Version\n- Versionsnummer unten im Anmeldebildschirm",
         "targetAbi": "12.2.0.0",
         "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.1.3/jellyfin-remote_1.1.3.0.zip",
         "checksum": "70d46e3138422283ef243c09b31d13f4",
@@ -26,7 +26,7 @@
       },
       {
         "version": "1.1.2.0",
-        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.1.2",
+        "changelog": "- Pfeil „Zurück zu Jellyfin“ immer sichtbar, wenn die Fernbedienung über das Plugin läuft\n- Link „Zurück zu Jellyfin“ auch im Anmeldebildschirm",
         "targetAbi": "12.2.0.0",
         "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.1.2/jellyfin-remote_1.1.2.0.zip",
         "checksum": "faa3ca108ab9b1e3a5f3b1f9934cff8e",
@@ -34,7 +34,7 @@
       },
       {
         "version": "1.1.1.0",
-        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.1.1",
+        "changelog": "- Hinweis, warum kein Gerät steuerbar ist: Jellyfin auf dem Gerät nicht geöffnet oder Reverse-Proxy blockiert WebSockets (mit Anleitung)\n- Andere Fernbedienungen erscheinen nicht mehr in der Geräteliste",
         "targetAbi": "12.2.0.0",
         "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.1.1/jellyfin-remote_1.1.1.0.zip",
         "checksum": "24bb81499c02c738f291caf0e775e7bc",
@@ -42,7 +42,7 @@
       },
       {
         "version": "1.1.0.0",
-        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.1.0",
+        "changelog": "- Automatische Anmeldung: Aus Jellyfin heraus geöffnet (Browser oder Jellyfin-App), ist die Fernbedienung direkt angemeldet – per Quick Connect mit eigenem Zugangs-Token\n- Anmeldung per Quick-Connect-Code\n- Fernbedienung öffnet im selben Fenster, mit Zurück-Pfeil zu Jellyfin",
         "targetAbi": "12.2.0.0",
         "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.1.0/jellyfin-remote_1.1.0.0.zip",
         "checksum": "3c835466a10fbed74c785236d131dd36",
@@ -50,7 +50,7 @@
       },
       {
         "version": "1.0.0.0",
-        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.0.0",
+        "changelog": "- Erste Version: Fernbedienung unter /remote/ mit Steuerkreuz, Wiedergabetasten, Lautstärke und Live-Suche\n- Link „Fernbedienung“ im Menü und Symbol in der Kopfzeile des Web-Clients\n- Einstellungsseite mit QR-Codes für Browser und iPhone-App",
         "targetAbi": "12.2.0.0",
         "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.0.0/jellyfin-remote_1.0.0.0.zip",
         "checksum": "02e8a1b9dedf4330072f56e1f09435b7",

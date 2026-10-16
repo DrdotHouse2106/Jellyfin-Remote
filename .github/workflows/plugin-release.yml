@@ -52,6 +52,15 @@ jobs:
           grep -n "APP_VERSION =" app/js/version.js
           grep -n "CACHE_NAME =" app/service-worker.js
 
+      - name: Änderungen aus CHANGELOG.md lesen
+        run: |
+          python3 scripts/changelog.py "${{ steps.version.outputs.version }}" > changelog.txt
+          if [ ! -s changelog.txt ]; then
+            echo "::error::In CHANGELOG.md fehlt der Abschnitt '## ${{ steps.version.outputs.version }}'"
+            exit 1
+          fi
+          cat changelog.txt
+
       - name: Plugin bauen
         run: dotnet publish plugin/Jellyfin.Plugin.Remote -c Release -o build -p:Version=${{ steps.version.outputs.version }}
 
@@ -65,7 +74,7 @@ jobs:
           cat > package/meta.json <<JSON
           {
             "category": "General",
-            "changelog": "Siehe https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}",
+            "changelog": $(python3 -c 'import json; print(json.dumps(open("changelog.txt", encoding="utf-8").read().strip()))'),
             "description": "Fernbedienung und Mediathek-Browser für Smartphones – erreichbar unter /remote/.",
             "guid": "${PLUGIN_GUID}",
             "name": "Jellyfin Remote",
@@ -90,7 +99,7 @@ jobs:
           target_commitish: main
           name: Jellyfin Remote ${{ steps.version.outputs.version }}
           files: ${{ steps.version.outputs.zip }}
-          generate_release_notes: true
+          body_path: changelog.txt
 
       - name: Repository-Datei aktualisieren
         env:
@@ -98,7 +107,6 @@ jobs:
           SOURCE_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/${{ steps.version.outputs.zip }}
           CHECKSUM: ${{ steps.package.outputs.checksum }}
           TIMESTAMP: ${{ steps.package.outputs.timestamp }}
-          CHANGELOG: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}
         run: |
           python3 - <<'PY'
           import json, os
@@ -108,7 +116,7 @@ jobs:
           plugin['versions'] = [v for v in plugin['versions'] if v['version'] != os.environ['VERSION']]
           plugin['versions'].insert(0, {
               'version': os.environ['VERSION'],
-              'changelog': os.environ['CHANGELOG'],
+              'changelog': open('changelog.txt', encoding='utf-8').read().strip(),
               'targetAbi': os.environ['TARGET_ABI'],
               'sourceUrl': os.environ['SOURCE_URL'],
               'checksum': os.environ['CHECKSUM'],
