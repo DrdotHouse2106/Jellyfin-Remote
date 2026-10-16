@@ -43,6 +43,15 @@ jobs:
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           echo "zip=jellyfin-remote_$VERSION.0.zip" >> "$GITHUB_OUTPUT"
 
+      - name: Versionsnummer in die App schreiben
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          sed -i "s/APP_VERSION = '[^']*'/APP_VERSION = '$V'/" app/js/version.js
+          sed -i "s/const CACHE_NAME = 'jellyfin-remote-[^']*'/const CACHE_NAME = 'jellyfin-remote-$V'/" app/service-worker.js
+          sed -i "s#<Version>[^<]*</Version>#<Version>$V</Version>#" plugin/Jellyfin.Plugin.Remote/Jellyfin.Plugin.Remote.csproj
+          grep -n "APP_VERSION =" app/js/version.js
+          grep -n "CACHE_NAME =" app/service-worker.js
+
       - name: Plugin bauen
         run: dotnet publish plugin/Jellyfin.Plugin.Remote -c Release -o build -p:Version=${{ steps.version.outputs.version }}
 
@@ -111,6 +120,6 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add jellyfin-repository.json
-          git commit -m "Plugin-Repository: Version ${{ steps.version.outputs.version }}"
+          git add jellyfin-repository.json app/js/version.js app/service-worker.js plugin/Jellyfin.Plugin.Remote/Jellyfin.Plugin.Remote.csproj
+          git commit -m "Release ${{ steps.version.outputs.version }}"
           git push origin main

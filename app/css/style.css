@@ -606,3 +606,5 @@ p { margin: 0; }
 
 /* Link im Stil eines Icon-Buttons (z. B. „Zurück zu Jellyfin“) */
 a.icon-btn, a.link-btn { color: inherit; text-decoration: none; }
+
+.app-version { text-align: center; font-size: 0.75rem; margin-top: -8px; }

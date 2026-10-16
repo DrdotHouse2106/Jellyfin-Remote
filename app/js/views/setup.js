@@ -5,6 +5,7 @@
 
 import { JellyfinApi, ApiError, normalizeServerUrl, isNativeApp } from '../api.js';
 import { $, withLoading } from '../ui.js';
+import { APP_VERSION } from '../version.js';
 
 export function initSetupView(app) {
   const form = $('#setup-form');
@@ -16,6 +17,8 @@ export function initSetupView(app) {
   const saveBtn = $('#btn-save');
   const statusBox = $('#setup-status');
   const logoutBtn = $('#btn-logout');
+
+  $('#app-version').textContent = `Jellyfin Remote ${APP_VERSION}`;
 
   let mode = 'user';
   /** Bricht eine laufende Quick-Connect-Anmeldung ab. */

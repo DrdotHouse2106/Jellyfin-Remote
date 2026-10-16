@@ -1,10 +1,12 @@
+import { APP_VERSION } from './version.js';
+
 /**
  * Schlanker Client für die Jellyfin-REST-API.
  * Kapselt Authentifizierung, Fehlerbehandlung und alle benötigten Endpunkte.
  */
 
 const CLIENT_NAME = 'Jellyfin Remote';
-const CLIENT_VERSION = '1.0.0';
+const CLIENT_VERSION = APP_VERSION;
 
 /** Jellyfin rechnet Zeiten in "Ticks" (100 ns). */
 export const TICKS_PER_SECOND = 10_000_000;

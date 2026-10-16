@@ -15,13 +15,6 @@ namespace Jellyfin.Plugin.Remote.Api;
 [AllowAnonymous]
 public class RemoteController : ControllerBase
 {
-    private static readonly HashSet<string> NoCacheFiles = new(StringComparer.Ordinal)
-    {
-        "index.html",
-        "manifest.json",
-        "service-worker.js",
-    };
-
     private readonly IServerApplicationHost _applicationHost;
 
     /// <summary>
@@ -59,7 +52,9 @@ public class RemoteController : ControllerBase
             return NotFound();
         }
 
-        return Asset("app/" + path, NoCacheFiles.Contains(path));
+        // Immer beim Server nachfragen (per ETag meist nur „304 Nicht geändert“) –
+        // so ist nach einem Plugin-Update sofort die neue App da.
+        return Asset("app/" + path, noCache: true);
     }
 
     /// <summary>

@@ -1,14 +1,16 @@
 /**
  * Service Worker – speichert die App-Struktur (App-Shell) für den Offline-Start.
  *
- * Anfragen an den Jellyfin-Server werden bewusst NICHT zwischengespeichert:
- * Sitzungen, Suchergebnisse und Steuerbefehle müssen immer live sein.
+ * Strategie „Netzwerk zuerst“: Online wird immer die aktuelle Version vom Server geladen
+ * (nach einem Plugin-Update also sofort die neue App), der Zwischenspeicher dient nur
+ * als Rückfall ohne Verbindung.
  *
- * Nach Änderungen an App-Dateien die Versionsnummer erhöhen,
- * damit alle Geräte die neue Version laden.
+ * Anfragen an die Jellyfin-API werden bewusst NICHT zwischengespeichert:
+ * Sitzungen, Suchergebnisse und Steuerbefehle müssen immer live sein.
  */
 
-const CACHE_NAME = 'jellyfin-remote-v6';
+// Wird beim Plugin-Release automatisch auf die Versionsnummer gesetzt.
+const CACHE_NAME = 'jellyfin-remote-1.1.3';
 
 const APP_SHELL = [
   './',
@@ -16,6 +18,7 @@ const APP_SHELL = [
   './manifest.json',
   './css/style.css',
   './js/app.js',
+  './js/version.js',
   './js/api.js',
   './js/storage.js',
   './js/ui.js',
@@ -34,7 +37,8 @@ const APP_SHELL = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      // cache: 'reload' umgeht den HTTP-Cache des Browsers, damit wirklich die neue Version gespeichert wird.
+      .then((cache) => cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -55,33 +59,19 @@ self.addEventListener('fetch', (event) => {
   // Nur GET-Anfragen der eigenen Herkunft behandeln – alles andere (Jellyfin-API) geht direkt ans Netz.
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // Seitenaufrufe: zuerst Netzwerk (für Updates), offline aus dem Cache.
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
-          return response;
-        })
-        .catch(() => caches.match('./index.html')),
-    );
-    return;
-  }
-
-  // Statische Dateien: sofort aus dem Cache, im Hintergrund aktualisieren (Stale-While-Revalidate).
+  // Netzwerk zuerst, bei fehlender Verbindung aus dem Zwischenspeicher.
+  // cache: 'no-cache' lässt den Browser immer beim Server nachfragen (ETag → meist 304).
+  const networkRequest = request.mode === 'navigate' ? request : new Request(request, { cache: 'no-cache' });
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    }),
+    fetch(networkRequest)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          const key = request.mode === 'navigate' ? './index.html' : request;
+          caches.open(CACHE_NAME).then((cache) => cache.put(key, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request.mode === 'navigate' ? './index.html' : request)),
   );
 });
