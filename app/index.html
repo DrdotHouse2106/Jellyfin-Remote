@@ -50,34 +50,55 @@
           <p class="muted">Verbinde dich mit deinem Jellyfin-Server.</p>
         </div>
 
-        <form class="card form" id="setup-form" novalidate autocomplete="off">
+        <form class="card form" id="setup-form" novalidate>
           <label class="field">
             <span class="field__label">Server-URL</span>
-            <input class="input" id="input-url" type="url" inputmode="url" placeholder="http://192.168.1.10:8096"
-                   autocapitalize="off" autocorrect="off" spellcheck="false" required>
+            <input class="input" id="input-url" type="url" inputmode="url" placeholder="https://jellyfin.example.de"
+                   autocomplete="url" autocapitalize="off" autocorrect="off" spellcheck="false" required>
           </label>
 
-          <label class="field">
-            <span class="field__label">API-Token</span>
-            <span class="input-wrap">
-              <input class="input" id="input-token" type="password" placeholder="API-Schlüssel"
-                     autocapitalize="off" autocorrect="off" spellcheck="false" required>
-              <button class="input-wrap__btn" id="btn-toggle-token" type="button" aria-label="Token anzeigen">
-                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </span>
-            <span class="field__hint">Erstellen unter Dashboard → API-Schlüssel.</span>
-          </label>
+          <!-- Anmeldeart -->
+          <div class="segmented" role="radiogroup" aria-label="Anmeldeart">
+            <button class="segmented__btn" data-mode="user" type="button" role="radio">Benutzerkonto</button>
+            <button class="segmented__btn" data-mode="token" type="button" role="radio">API-Token</button>
+          </div>
+
+          <div class="form__group" id="auth-user">
+            <label class="field">
+              <span class="field__label">Benutzername</span>
+              <input class="input" id="input-username" type="text" autocomplete="username"
+                     autocapitalize="off" autocorrect="off" spellcheck="false">
+            </label>
+            <label class="field">
+              <span class="field__label">Passwort</span>
+              <input class="input" id="input-password" type="password" autocomplete="current-password">
+            </label>
+          </div>
+
+          <div class="form__group" id="auth-token" hidden>
+            <label class="field">
+              <span class="field__label">API-Token</span>
+              <span class="input-wrap">
+                <input class="input" id="input-token" type="password" placeholder="API-Schlüssel" autocomplete="off"
+                       autocapitalize="off" autocorrect="off" spellcheck="false">
+                <button class="input-wrap__btn" id="btn-toggle-token" type="button" aria-label="Token anzeigen">
+                  <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </span>
+              <span class="field__hint">Erstellen unter Dashboard → API-Schlüssel (nur Administratoren).</span>
+            </label>
+          </div>
 
           <div class="status-box" id="setup-status" hidden></div>
 
           <div class="form__actions">
             <button class="btn btn--ghost" id="btn-test" type="button">Verbindung testen</button>
-            <button class="btn btn--primary" id="btn-save" type="submit">Speichern &amp; weiter</button>
+            <button class="btn btn--primary" id="btn-save" type="submit">Anmelden</button>
           </div>
         </form>
 
-        <button class="link-btn link-btn--danger" id="btn-logout" type="button" hidden>Gespeicherte Daten löschen</button>
+        <button class="link-btn" id="btn-setup-back" type="button" hidden>← Zurück zur Fernbedienung</button>
+        <button class="link-btn link-btn--danger" id="btn-logout" type="button" hidden>Abmelden &amp; Daten löschen</button>
       </section>
 
       <!-- 2) Sitzungs-Auswahl -->

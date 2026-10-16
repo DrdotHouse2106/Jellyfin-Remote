@@ -31,7 +31,7 @@ export function initSearchView(app) {
     setStatus('Suche …');
 
     try {
-      const data = await app.api.searchItems(term, { userId: app.session?.UserId, signal: controller.signal });
+      const data = await app.api.searchItems(term, { userId: app.config.userId ?? app.session?.UserId, signal: controller.signal });
       const items = data?.Items ?? [];
       render(items);
       setStatus(items.length ? '' : `Keine Treffer für „${term}“.`);

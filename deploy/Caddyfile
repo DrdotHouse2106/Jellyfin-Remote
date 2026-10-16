@@ -1,0 +1,15 @@
+# Beispiel: Caddy als Reverse-Proxy (HTTPS-Zertifikate automatisch)
+jellyfin.example.de {
+	redir /remote /remote/
+
+	# Variante A: Container aus docker-compose.yml
+	reverse_proxy /remote/* 127.0.0.1:8097
+
+	# Variante B: ohne Docker – Inhalt von app/ nach /srv/jellyfin-remote/ kopieren
+	# handle_path /remote/* {
+	# 	root * /srv/jellyfin-remote
+	# 	file_server
+	# }
+
+	reverse_proxy 127.0.0.1:8096
+}

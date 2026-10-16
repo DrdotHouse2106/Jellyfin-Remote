@@ -8,7 +8,7 @@
  * damit alle Geräte die neue Version laden.
  */
 
-const CACHE_NAME = 'jellyfin-remote-v1';
+const CACHE_NAME = 'jellyfin-remote-v2';
 
 const APP_SHELL = [
   './',

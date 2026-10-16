@@ -44,6 +44,9 @@ function detectDeviceName() {
   return 'Browser';
 }
 
+/** Läuft die App als native iOS-/Android-App (Capacitor)? */
+export const isNativeApp = Boolean(window.Capacitor?.isNativePlatform?.());
+
 function statusMessage(status) {
   switch (status) {
     case 401: return 'Zugriff verweigert – das API-Token ist ungültig.';
@@ -62,14 +65,20 @@ function networkMessage(serverUrl) {
 
 export class JellyfinApi {
   /**
-   * @param {{serverUrl: string, token: string, deviceId: string}} options
+   * @param {object} options
+   * @param {string} options.serverUrl
+   * @param {string} [options.token]  Ohne Token sind nur öffentliche Endpunkte und die Anmeldung möglich.
+   * @param {string} options.deviceId
+   * @param {Function} [options.onUnauthorized]  Wird bei HTTP 401 aufgerufen (Token widerrufen/abgelaufen).
    */
-  constructor({ serverUrl, token, deviceId }) {
+  constructor({ serverUrl, token, deviceId, onUnauthorized }) {
     this.serverUrl = serverUrl;
     this.token = token;
+    this.onUnauthorized = onUnauthorized;
     this.authHeader =
       `MediaBrowser Client="${CLIENT_NAME}", Device="${detectDeviceName()}", ` +
-      `DeviceId="${deviceId}", Version="${CLIENT_VERSION}", Token="${token}"`;
+      `DeviceId="${deviceId}", Version="${CLIENT_VERSION}"` +
+      (token ? `, Token="${token}"` : '');
   }
 
   /** Zentrale Request-Funktion. Gibt JSON, Text oder null (204) zurück. */
@@ -96,18 +105,39 @@ export class JellyfinApi {
       throw new ApiError(networkMessage(this.serverUrl));
     }
 
-    if (!response.ok) throw new ApiError(statusMessage(response.status), response.status);
+    if (!response.ok) {
+      if (response.status === 401) this.onUnauthorized?.();
+      throw new ApiError(statusMessage(response.status), response.status);
+    }
     if (response.status === 204) return null;
 
     const type = response.headers.get('content-type') ?? '';
     return type.includes('json') ? response.json() : response.text();
   }
 
-  // ---------- System ----------
+  // ---------- System & Anmeldung ----------
+
+  /** Öffentliche Serverinformationen – funktioniert ohne Anmeldung. */
+  getPublicSystemInfo({ signal } = {}) {
+    return this.request('/System/Info/Public', { signal });
+  }
 
   /** Serverinformationen – dient als Verbindungstest (benötigt gültiges Token). */
   getSystemInfo() {
     return this.request('/System/Info');
+  }
+
+  /** Anmeldung mit Benutzername und Passwort. Liefert u. a. AccessToken und User. */
+  authenticateByName(username, password) {
+    return this.request('/Users/AuthenticateByName', {
+      method: 'POST',
+      body: { Username: username, Pw: password },
+    });
+  }
+
+  /** Meldet das aktuelle Token am Server ab (widerruft es). */
+  logout() {
+    return this.request('/Sessions/Logout', { method: 'POST' });
   }
 
   // ---------- Sitzungen ----------

@@ -1,0 +1,10 @@
+{
+  "appId": "me.ulber.jellyfinremote",
+  "appName": "Jellyfin Remote",
+  "webDir": "app",
+  "backgroundColor": "#0b0d12",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b0d12"
+  }
+}

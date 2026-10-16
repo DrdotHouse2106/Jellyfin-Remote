@@ -3,7 +3,7 @@
  * und verwaltet das aktuell gewählte Zielgerät.
  */
 
-import { JellyfinApi, ApiError } from './api.js';
+import { JellyfinApi, ApiError, isNativeApp } from './api.js';
 import { loadConfig, saveConfig, clearConfig, getDeviceId } from './storage.js';
 import { $, toast } from './ui.js';
 import { initSetupView } from './views/setup.js';
@@ -25,16 +25,25 @@ const app = {
   views: {},
   currentView: null,
 
-  /** Speichert die Zugangsdaten und erstellt den API-Client. */
-  connect({ serverUrl, token }) {
-    const serverChanged = this.config.serverUrl && this.config.serverUrl !== serverUrl;
-    this.config = saveConfig({ serverUrl, token });
-    if (serverChanged) this.clearTarget();
-    this.api = new JellyfinApi({ serverUrl, token, deviceId: this.deviceId });
+  /**
+   * Speichert die Zugangsdaten und erstellt den API-Client.
+   * @param {{serverUrl: string, token: string, authMode: 'user'|'token', userId: ?string, userName: ?string}} credentials
+   */
+  connect(credentials) {
+    const previous = this.config;
+    if (previous.serverUrl && previous.serverUrl !== credentials.serverUrl) this.clearTarget();
+    // Ein altes Benutzer-Token beim Server abmelden, damit keine verwaisten Anmeldungen bleiben.
+    if (previous.authMode === 'user' && previous.token && previous.token !== credentials.token) {
+      this.api?.logout().catch(() => {});
+    }
+
+    this.config = saveConfig(credentials);
+    this.api = createApi(credentials.serverUrl, credentials.token);
   },
 
-  /** Entfernt alle gespeicherten Daten und kehrt zur Einrichtung zurück. */
+  /** Meldet ab, entfernt alle gespeicherten Daten und kehrt zur Einrichtung zurück. */
   logout() {
+    if (this.config.authMode === 'user') this.api?.logout().catch(() => {});
     clearConfig();
     this.config = {};
     this.api = null;
@@ -123,6 +132,20 @@ const app = {
   },
 };
 
+function createApi(serverUrl, token) {
+  return new JellyfinApi({
+    serverUrl,
+    token,
+    deviceId: app.deviceId,
+    // Token wurde widerrufen oder ist ungültig → zur Anmeldung zurück.
+    onUnauthorized: () => {
+      if (app.currentView === 'setup') return;
+      toast('Sitzung abgelaufen – bitte erneut anmelden.', 'error');
+      app.show('setup');
+    },
+  });
+}
+
 // ---------- Kopfzeile ----------
 
 function updateDeviceChip() {
@@ -160,7 +183,7 @@ function init() {
   if (!serverUrl || !token) {
     app.show('setup');
   } else {
-    app.api = new JellyfinApi({ serverUrl, token, deviceId: app.deviceId });
+    app.api = createApi(serverUrl, token);
     if (targetDeviceId || targetSessionId) {
       app.session = { Id: targetSessionId, DeviceId: targetDeviceId, DeviceName: targetName };
       app.show('remote');
@@ -174,7 +197,8 @@ function init() {
 }
 
 function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
+  // In der nativen App (Capacitor) liegen die Dateien ohnehin lokal – kein Service Worker nötig.
+  if (isNativeApp || !('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').catch((err) => {
       console.warn('Service Worker konnte nicht registriert werden:', err);

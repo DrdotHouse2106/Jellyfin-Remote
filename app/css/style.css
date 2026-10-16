@@ -238,6 +238,28 @@ p { margin: 0; }
 }
 
 .form__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form__group { display: flex; flex-direction: column; gap: 18px; }
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.segmented__btn {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.segmented__btn.is-active { background: var(--surface-3); color: var(--text); }
 
 .status-box {
   padding: 12px 14px;
