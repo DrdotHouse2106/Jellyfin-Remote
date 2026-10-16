@@ -220,6 +220,13 @@ function init() {
     tab.addEventListener('click', () => app.show(tab.dataset.tab));
   });
 
+  // Aus Jellyfin heraus geöffnet (Link im Web-Client bzw. in der Jellyfin-App)? → Zurück-Button zeigen.
+  try {
+    $('#btn-back-jellyfin').hidden = !sessionStorage.getItem('jellyfin-remote.from-web');
+  } catch {
+    // sessionStorage nicht verfügbar – Button bleibt ausgeblendet.
+  }
+
   // Aktiviert :active-Zustände für Touch-Feedback in iOS Safari.
   document.addEventListener('touchstart', () => {}, { passive: true });
 

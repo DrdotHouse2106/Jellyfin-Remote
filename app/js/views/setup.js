@@ -1,6 +1,6 @@
 /**
  * Einrichtung: Server-URL eingeben und anmelden – wahlweise mit
- * Jellyfin-Benutzerkonto (Benutzername/Passwort) oder mit API-Token.
+ * Jellyfin-Benutzerkonto (Benutzername/Passwort), Quick Connect oder API-Token.
  */
 
 import { JellyfinApi, ApiError, normalizeServerUrl, isNativeApp } from '../api.js';
@@ -18,6 +18,10 @@ export function initSetupView(app) {
   const logoutBtn = $('#btn-logout');
 
   let mode = 'user';
+  /** Bricht eine laufende Quick-Connect-Anmeldung ab. */
+  let quickConnectAbort = null;
+
+  const SUBMIT_LABELS = { user: 'Anmelden', quickconnect: 'Code anfordern', token: 'Anmelden' };
 
   function setStatus(message, type) {
     statusBox.textContent = message;
@@ -26,7 +30,9 @@ export function initSetupView(app) {
   }
 
   function setMode(next) {
+    stopQuickConnect();
     mode = next;
+    saveBtn.textContent = SUBMIT_LABELS[mode];
     document.querySelectorAll('.segmented__btn').forEach((btn) => {
       const active = btn.dataset.mode === mode;
       btn.classList.toggle('is-active', active);
@@ -34,6 +40,61 @@ export function initSetupView(app) {
     });
     $('#auth-user').hidden = mode !== 'user';
     $('#auth-token').hidden = mode !== 'token';
+    $('#auth-quickconnect').hidden = mode !== 'quickconnect';
+  }
+
+  function stopQuickConnect() {
+    quickConnectAbort?.abort();
+    quickConnectAbort = null;
+    $('#qc-code').hidden = true;
+  }
+
+  const wait = (ms, signal) =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, ms);
+      signal.addEventListener('abort', () => {
+        clearTimeout(timer);
+        reject(new DOMException('Abgebrochen', 'AbortError'));
+      });
+    });
+
+  /**
+   * Quick Connect: Code anzeigen und warten, bis er in einer angemeldeten
+   * Jellyfin-App bestätigt wurde. Liefert anschließend die Zugangsdaten.
+   */
+  async function loginWithQuickConnect(serverUrl) {
+    const api = createApi(serverUrl);
+    if (!(await api.isQuickConnectEnabled())) {
+      throw new ApiError('Quick Connect ist auf dem Server ausgeschaltet (Dashboard → Allgemein → Quick Connect).');
+    }
+
+    const request = await api.initiateQuickConnect();
+    const controller = new AbortController();
+    quickConnectAbort = controller;
+
+    const codeBox = $('#qc-code');
+    codeBox.textContent = request.Code;
+    codeBox.hidden = false;
+    setStatus('Warte auf Bestätigung … Code in Jellyfin unter Einstellungen → Quick Connect eingeben.', 'ok');
+
+    const deadline = Date.now() + 10 * 60 * 1000; // Jellyfin verwirft Anfragen nach 10 Minuten
+    while (Date.now() < deadline) {
+      await wait(2000, controller.signal);
+      const state = await api.getQuickConnectState(request.Secret, { signal: controller.signal });
+      if (state?.Authenticated) {
+        const result = await api.authenticateWithQuickConnect(request.Secret);
+        stopQuickConnect();
+        return {
+          serverUrl,
+          token: result.AccessToken,
+          authMode: 'user',
+          userId: result.User?.Id ?? null,
+          userName: result.User?.Name ?? null,
+        };
+      }
+    }
+    stopQuickConnect();
+    throw new ApiError('Der Code ist abgelaufen – bitte einen neuen anfordern.');
   }
 
   const createApi = (serverUrl, token) => new JellyfinApi({ serverUrl, token, deviceId: app.deviceId });
@@ -70,6 +131,8 @@ export function initSetupView(app) {
       await createApi(serverUrl, token).getSystemInfo();
       return { serverUrl, token, authMode: 'token', userId: null, userName: null };
     }
+
+    if (mode === 'quickconnect') return loginWithQuickConnect(serverUrl);
 
     const username = usernameInput.value.trim();
     if (!username) throw new ApiError('Bitte einen Benutzernamen eingeben.');
@@ -133,7 +196,7 @@ export function initSetupView(app) {
         passwordInput.value = '';
         app.show(app.session ? 'remote' : 'sessions');
       } catch (err) {
-        setStatus(err.message, 'error');
+        if (err.name !== 'AbortError') setStatus(err.message, 'error');
       }
     });
   });
@@ -145,6 +208,7 @@ export function initSetupView(app) {
   });
 
   return {
+    onHide: stopQuickConnect,
     onShow() {
       const { serverUrl, token, authMode, userName } = app.config;
       setMode(authMode ?? 'user');

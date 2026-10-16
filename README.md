@@ -12,7 +12,7 @@ Die App lässt sich auf drei Arten nutzen:
 
 ## Funktionen
 
-- **Anmeldung** – mit deinem Jellyfin-Benutzerkonto (Benutzername/Passwort) oder alternativ mit einem API-Token. Läuft die App auf derselben Domain wie Jellyfin, wird die Server-URL automatisch erkannt.
+- **Anmeldung** – mit deinem Jellyfin-Benutzerkonto (Benutzername/Passwort), per **Quick Connect** (Code in einer angemeldeten Jellyfin-App bestätigen, kein Passwort nötig) oder mit einem API-Token. Wird die Fernbedienung aus Jellyfin heraus geöffnet, ist sie **automatisch angemeldet**. Läuft die App auf derselben Domain wie Jellyfin, wird die Server-URL automatisch erkannt.
 - **Zielgerät wählen** – listet alle aktiven Sitzungen (`/Sessions`). Steuerbare Geräte (z. B. Jellyfin auf dem Fernseher) können ausgewählt werden.
 - **Live-Suche** – sucht während der Eingabe (debounced) nach Filmen und Episoden und zeigt Cover an. Ein Tipp startet die Wiedergabe sofort auf dem Zielgerät.
 - **Fernbedienung** – Steuerkreuz (Hoch, Runter, Links, Rechts, OK) sowie Zurück, Home und Bildschirmmenü.
@@ -64,6 +64,7 @@ Updates erscheinen danach automatisch im Dashboard.
 ### Was das Plugin macht
 
 - **App unter `/remote/`** – die Server-URL wird automatisch erkannt (auch mit konfigurierter Basis-URL), du musst dich nur noch anmelden.
+- **Automatische Anmeldung** – tippst du in Jellyfin (Browser oder Jellyfin-App für iOS/Android) auf „Fernbedienung“, öffnet sie sich direkt angemeldet und im selben Fenster, mit einem „Zurück“-Button zu Jellyfin. Dafür stellt das Plugin per Quick Connect mit deiner bestehenden Anmeldung ein eigenes Token für die Fernbedienung aus – sie erscheint im Dashboard unter **Geräte** als „Jellyfin Remote“ und kann dort jederzeit abgemeldet werden. Voraussetzung: **Quick Connect** ist eingeschaltet (Dashboard → Allgemein, Standard: an); sonst öffnet sich die normale Anmeldung.
 - **Link im Web-Client** – ein Eintrag „Fernbedienung“ im Seitenmenü und ein Fernbedienungs-Symbol neben der Suche in der Kopfzeile. Beides lässt sich in den Plugin-Einstellungen abschalten. Die Dateien des Web-Clients werden dabei **nicht verändert** – das Plugin ergänzt sie nur bei der Auslieferung.
 - **Einstellungsseite** (Dashboard → Plugins → Jellyfin Remote, oder im Dashboard-Menü „Fernbedienung“) mit zwei QR-Codes:
   - **Im Browser öffnen** – öffnet die Web-App auf dem Smartphone.
@@ -153,6 +154,7 @@ Nach Änderungen an den App-Dateien die Konstante `CACHE_NAME` in `app/service-w
 | Server erkennen | `GET /System/Info/Public` |
 | Plugin erkennen | `GET /JellyfinRemote/Info` (nur mit Plugin) |
 | Anmeldung | `POST /Users/AuthenticateByName` |
+| Quick Connect | `GET /QuickConnect/Enabled`, `POST /QuickConnect/Initiate`, `GET /QuickConnect/Connect`, `POST /QuickConnect/Authorize`, `POST /Users/AuthenticateWithQuickConnect` |
 | Abmeldung | `POST /Sessions/Logout` |
 | Token prüfen | `GET /System/Info` |
 | Sitzungen | `GET /Sessions` |

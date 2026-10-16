@@ -27,6 +27,9 @@
   <div class="app">
     <!-- Kopfzeile: aktuelles Zielgerät + Einstellungen -->
     <header class="topbar" id="topbar" hidden>
+      <a class="icon-btn" id="btn-back-jellyfin" href="../web/" aria-label="Zurück zu Jellyfin" title="Zurück zu Jellyfin" hidden>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
       <button class="device-chip" id="btn-change-device" type="button" aria-label="Zielgerät wechseln">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
         <span class="device-chip__text">
@@ -59,8 +62,17 @@
 
           <!-- Anmeldeart -->
           <div class="segmented" role="radiogroup" aria-label="Anmeldeart">
-            <button class="segmented__btn" data-mode="user" type="button" role="radio">Benutzerkonto</button>
+            <button class="segmented__btn" data-mode="user" type="button" role="radio">Konto</button>
+            <button class="segmented__btn" data-mode="quickconnect" type="button" role="radio">Quick Connect</button>
             <button class="segmented__btn" data-mode="token" type="button" role="radio">API-Token</button>
+          </div>
+
+          <div class="form__group" id="auth-quickconnect" hidden>
+            <div class="qc-code" id="qc-code" hidden aria-live="polite"></div>
+            <p class="field__hint" id="qc-hint">
+              Du bekommst einen Code, den du in einer angemeldeten Jellyfin-App unter
+              <strong>Einstellungen → Quick Connect</strong> eingibst. Ein Passwort ist nicht nötig.
+            </p>
           </div>
 
           <div class="form__group" id="auth-user">

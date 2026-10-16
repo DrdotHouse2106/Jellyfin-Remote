@@ -14,7 +14,7 @@ It can be used in three ways:
 
 ## Features
 
-- **Sign-in** with your Jellyfin user account (username/password) or an API token. When served on the same domain as Jellyfin, the server URL is detected automatically.
+- **Sign-in** with your Jellyfin user account (username/password), **Quick Connect** (confirm a code in a signed-in Jellyfin app – no password) or an API token. Opened from within Jellyfin, the remote is **signed in automatically**. When served on the same domain as Jellyfin, the server URL is detected automatically.
 - **Target device** – lists all active sessions; controllable devices (e.g. Jellyfin on your TV) can be selected.
 - **Live search** for movies and episodes with cover art; tap to play on the target device.
 - **Remote** – D-pad, OK, Back, Home, on-screen display.
@@ -31,6 +31,7 @@ It can be used in three ways:
 
 The plugin
 - serves the app at `/remote/` (server URL is detected automatically, base URLs are supported),
+- signs the remote in automatically when it is opened from Jellyfin (browser or the Jellyfin iOS/Android app): a separate token is issued via Quick Connect using your existing session (requires Quick Connect to be enabled),
 - adds a "Fernbedienung" (remote) entry to the web client menu and a remote icon next to the search button – without modifying any files on disk,
 - has a settings page with QR codes to open the web app or pair the iPhone app (`jellyfinremote://connect?server=…`),
 - exposes `GET /JellyfinRemote/Info` so the apps can detect it.

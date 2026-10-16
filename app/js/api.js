@@ -140,6 +140,28 @@ export class JellyfinApi {
     });
   }
 
+  // ---------- Quick Connect ----------
+
+  /** Ist Quick Connect auf dem Server aktiviert? */
+  async isQuickConnectEnabled() {
+    return (await this.request('/QuickConnect/Enabled')) === true;
+  }
+
+  /** Startet eine Quick-Connect-Anfrage. Liefert u. a. Code (zum Eingeben) und Secret. */
+  initiateQuickConnect() {
+    return this.request('/QuickConnect/Initiate', { method: 'POST' });
+  }
+
+  /** Status einer Quick-Connect-Anfrage (Authenticated = true, sobald bestätigt). */
+  getQuickConnectState(secret, { signal } = {}) {
+    return this.request('/QuickConnect/Connect', { query: { secret }, signal });
+  }
+
+  /** Anmeldung mit einer bestätigten Quick-Connect-Anfrage. */
+  authenticateWithQuickConnect(secret) {
+    return this.request('/Users/AuthenticateWithQuickConnect', { method: 'POST', body: { Secret: secret } });
+  }
+
   /** Meldet das aktuelle Token am Server ab (widerruft es). */
   logout() {
     return this.request('/Sessions/Logout', { method: 'POST' });
