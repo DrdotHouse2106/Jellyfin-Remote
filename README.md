@@ -178,7 +178,21 @@ Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server ein
 - **Jellyfin ist auf dem Gerät nicht geöffnet** – Jellyfin-App auf dem Fernseher starten bzw. den Browser-Tab offen lassen. Beendete Sitzungen bleiben noch bis zu 15 Minuten in der Liste.
 - **Der Reverse-Proxy blockiert WebSockets** – dann ist kein Gerät steuerbar. WebSocket-Unterstützung aktivieren:
   - *Nginx Proxy Manager:* beim Proxy-Host „Websockets Support“ einschalten.
-  - *Nginx:* im `location`-Block `proxy_http_version 1.1;`, `proxy_set_header Upgrade $http_upgrade;` und `proxy_set_header Connection "upgrade";` ergänzen.
+  - *Nginx:* Jellyfin nutzt für die Live-Verbindung den Pfad `/socket`. Am einfachsten einen eigenen `location`-Block ergänzen (funktioniert auch, wenn im Haupt-Block `proxy_set_header Connection "";` steht):
+
+    ```nginx
+    location /socket {
+        proxy_pass http://127.0.0.1:8096;   # gleiche Adresse wie im Haupt-Block
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 3600s;
+    }
+    ```
   - *Caddy* und *Traefik* reichen WebSockets automatisch durch.
 
 ## Sicherheit
