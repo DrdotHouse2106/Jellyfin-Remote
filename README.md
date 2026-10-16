@@ -169,6 +169,16 @@ Nach Änderungen an den App-Dateien die Konstante `CACHE_NAME` in `app/service-w
 
 Da Jellyfin bei jeder Neuverbindung eines Clients eine neue Sitzungs-ID vergibt, merkt sich die App die **Geräte-ID** des Zielgeräts und ermittelt die aktuelle Sitzung automatisch neu.
 
+## Gerät „nicht steuerbar“?
+
+Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server eine Live-Verbindung (**WebSocket**) besteht. Die Fernbedienung prüft das selbst und zeigt einen Hinweis an, wenn kein Gerät steuerbar ist:
+
+- **Jellyfin ist auf dem Gerät nicht geöffnet** – Jellyfin-App auf dem Fernseher starten bzw. den Browser-Tab offen lassen. Beendete Sitzungen bleiben noch bis zu 15 Minuten in der Liste.
+- **Der Reverse-Proxy blockiert WebSockets** – dann ist kein Gerät steuerbar. WebSocket-Unterstützung aktivieren:
+  - *Nginx Proxy Manager:* beim Proxy-Host „Websockets Support“ einschalten.
+  - *Nginx:* im `location`-Block `proxy_http_version 1.1;`, `proxy_set_header Upgrade $http_upgrade;` und `proxy_set_header Connection "upgrade";` ergänzen.
+  - *Caddy* und *Traefik* reichen WebSockets automatisch durch.
+
 ## Sicherheit
 
 - Bei der Anmeldung per Benutzerkonto wird **nicht das Passwort**, sondern nur das von Jellyfin ausgestellte Zugriffstoken gespeichert. Die Anmeldung erscheint im Jellyfin-Dashboard unter **Geräte** und kann dort jederzeit entfernt werden. „Abmelden & Daten löschen“ widerruft das Token auch am Server.

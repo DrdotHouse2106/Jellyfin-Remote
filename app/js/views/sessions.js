@@ -23,6 +23,42 @@ export function initSessionsView(app) {
   const list = $('#session-list');
   const empty = $('#sessions-empty');
   const refreshBtn = $('#btn-refresh-sessions');
+  const hint = $('#sessions-hint');
+
+  /** Ergebnis des WebSocket-Tests (einmal pro Seitenaufruf). */
+  let webSocketCheck = null;
+
+  function showHint(text, type = 'info') {
+    hint.textContent = text;
+    hint.className = `status-box${type === 'error' ? ' is-error' : ''}`;
+    hint.hidden = false;
+  }
+
+  /**
+   * Ist kein Gerät steuerbar, die Ursache ermitteln: Jellyfin kann ein Gerät nur über eine
+   * offene WebSocket-Verbindung steuern. Lässt der Reverse-Proxy keine WebSockets durch,
+   * ist nie ein Gerät steuerbar – sonst ist Jellyfin auf den Geräten gerade nicht geöffnet.
+   */
+  async function explainNoControllable() {
+    showHint('Kein Gerät ist gerade steuerbar – prüfe die Verbindung …');
+    webSocketCheck ??= app.api.testWebSocket(app.deviceId);
+    if (await webSocketCheck) {
+      showHint(
+        'Kein Gerät ist gerade steuerbar. Steuern lässt sich ein Gerät nur, solange Jellyfin dort geöffnet ist ' +
+          '(z. B. Jellyfin-App auf dem Fernseher gestartet, Browser-Tab offen). Geschlossene Sitzungen bleiben ' +
+          'noch bis zu 15 Minuten in der Liste.',
+      );
+    } else {
+      webSocketCheck = null; // beim nächsten Aktualisieren erneut prüfen
+      showHint(
+        'Dein Server bzw. Reverse-Proxy lässt keine WebSocket-Verbindungen durch. Jellyfin braucht sie, um ' +
+          'Geräte fernzusteuern. Lösung: im Reverse-Proxy WebSocket-Unterstützung aktivieren – z. B. bei ' +
+          'Nginx Proxy Manager „Websockets Support“ einschalten, bei Nginx die Header „Upgrade“ und ' +
+          '„Connection“ weiterreichen.',
+        'error',
+      );
+    }
+  }
 
   async function load() {
     refreshBtn.classList.add('is-spinning');
@@ -37,7 +73,8 @@ export function initSessionsView(app) {
 
   function render(sessions) {
     const items = sessions
-      .filter((s) => s.DeviceId !== app.deviceId) // eigene Sitzung ausblenden
+      // Fernbedienungen selbst (diese und andere Instanzen) sind keine Zielgeräte.
+      .filter((s) => s.DeviceId !== app.deviceId && s.Client !== 'Jellyfin Remote')
       .sort(
         (a, b) =>
           Number(b.SupportsRemoteControl) - Number(a.SupportsRemoteControl) ||
@@ -46,6 +83,9 @@ export function initSessionsView(app) {
 
     empty.hidden = items.length > 0;
     list.replaceChildren(...items.map((s) => h('li', {}, sessionCard(s))));
+
+    hint.hidden = true;
+    if (items.length > 0 && !items.some((s) => s.SupportsRemoteControl)) explainNoControllable();
   }
 
   function sessionCard(session) {

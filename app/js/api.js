@@ -140,6 +140,39 @@ export class JellyfinApi {
     });
   }
 
+  /**
+   * Prüft, ob eine WebSocket-Verbindung zum Server möglich ist. Jellyfin braucht sie,
+   * um Geräte fernzusteuern – manche Reverse-Proxys blockieren sie.
+   * @returns {Promise<boolean>}
+   */
+  testWebSocket(deviceId, timeout = 6000) {
+    return new Promise((resolve) => {
+      let socket;
+      const done = (ok) => {
+        clearTimeout(timer);
+        try {
+          socket?.close();
+        } catch {
+          // ignorieren
+        }
+        resolve(ok);
+      };
+      const timer = setTimeout(() => done(false), timeout);
+      try {
+        const url = new URL(`${this.serverUrl}/socket`);
+        url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+        url.searchParams.set('ApiKey', this.token);
+        url.searchParams.set('deviceId', deviceId);
+        socket = new WebSocket(url);
+        socket.onopen = () => done(true);
+        socket.onerror = () => done(false);
+        socket.onclose = () => done(false);
+      } catch {
+        done(false);
+      }
+    });
+  }
+
   // ---------- Quick Connect ----------
 
   /** Ist Quick Connect auf dem Server aktiviert? */
