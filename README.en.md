@@ -23,8 +23,9 @@ It can be used in three ways:
 
 ## Jellyfin plugin (Jellyfin 12.2+)
 
-1. In the dashboard go to **Plugins → Repositories → "+"** and add
-   `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/jellyfin-repository.json`
+1. In the dashboard go to **Plugins → Repositories → "+"** and add the combined repository of all DrdotHouse2106 plugins ([Jellyfin-Plugins](https://github.com/DrdotHouse2106/Jellyfin-Plugins)):
+   `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Plugins/main/manifest.json`
+   (or just this plugin: `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/jellyfin-repository.json`)
 2. Install **Jellyfin Remote** from the catalog and restart Jellyfin.
 3. Open `https://jellyfin.example.com/remote` and sign in with your Jellyfin account.
 

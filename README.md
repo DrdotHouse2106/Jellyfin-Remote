@@ -50,9 +50,11 @@ Das Plugin enthält die komplette App und liefert sie direkt über Jellyfin aus 
 
 ### Installation
 
-1. Im Jellyfin-Dashboard **Plugins → Repositories → „+“** wählen und eintragen:
-   - Name: `Jellyfin Remote`
-   - URL: `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/jellyfin-repository.json`
+1. Im Jellyfin-Dashboard **Plugins → Repositories → „+“** wählen und das gemeinsame Repository aller Plugins von DrdotHouse2106 eintragen ([Jellyfin-Plugins](https://github.com/DrdotHouse2106/Jellyfin-Plugins)):
+   - Name: `DrdotHouse2106`
+   - URL: `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Plugins/main/manifest.json`
+
+   Alternativ nur dieses Plugin: `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/jellyfin-repository.json`
 2. Unter **Plugins → Katalog** das Plugin **Jellyfin Remote** installieren.
 3. Jellyfin **neu starten**.
 4. Fertig: `https://jellyfin.example.de/remote` öffnen und mit deinem Jellyfin-Konto anmelden.
@@ -73,7 +75,7 @@ Nach dem Ein- oder Ausschalten der Links den Web-Client neu laden (am Computer *
 
 ### Neue Version veröffentlichen
 
-Die GitHub Action [`.github/workflows/plugin-release.yml`](.github/workflows/plugin-release.yml) baut das Plugin, erstellt ein GitHub-Release und aktualisiert `jellyfin-repository.json`:
+Die GitHub Action [`.github/workflows/plugin-release.yml`](.github/workflows/plugin-release.yml) baut das Plugin, erstellt ein GitHub-Release und aktualisiert `jellyfin-repository.json`. Das gemeinsame Repository [Jellyfin-Plugins](https://github.com/DrdotHouse2106/Jellyfin-Plugins) übernimmt neue Versionen automatisch innerhalb einer Stunde:
 
 ```bash
 git tag v1.0.1
