@@ -259,7 +259,7 @@ export class JellyfinApi {
   }
 
   /**
-   * Apps und Einstellungen eines Fernsehers mit „Heimkino TV“. Die TV-App legt sie in den
+   * Apps und Einstellungen eines Fernsehers mit „Quallenkino“. Die TV-App legt sie in den
    * Anzeige-Einstellungen ab (CustomPrefs: apps als JSON, settings als Liste).
    */
   getTvClientDevice(deviceId, userId) {

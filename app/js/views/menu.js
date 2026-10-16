@@ -7,8 +7,8 @@
 import { $, h, showError, toast } from '../ui.js';
 
 /** Client-Name der TV-App „Quallenkino“ (Jellyfin-TV-Client). */
-const HEIMKINO_CLIENT = /^(quallenkino|heimkino tv)/i;
-/** Präfix für Zusatzbefehle an Heimkino TV (per SendString). */
+const QUALLENKINO_CLIENT = /^(quallenkino|heimkino tv)/i;
+/** Präfix für Zusatzbefehle an Quallenkino (per SendString). */
 const TV_PREFIX = 'tvclient:';
 
 const ICONS = {
@@ -137,7 +137,7 @@ export function initMenuView(app) {
       // mit der bekannten Sitzung weitermachen
     }
 
-    const heimkino = HEIMKINO_CLIENT.test(session?.Client ?? '');
+    const heimkino = QUALLENKINO_CLIENT.test(session?.Client ?? '');
     renderAreas(session, heimkino);
 
     if (heimkino) {
