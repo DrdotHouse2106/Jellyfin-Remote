@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/app/icons/icon-512.png",
     "versions": [
       {
+        "version": "1.2.1.0",
+        "changelog": "- Steuerkreuz im Jellyfin-Web-Client (Browser, normales Layout) zuverlässig: ein Druck = eine Kachel, Reihen-Überschriften und Zusatzknöpfe werden übersprungen, die Auswahl startet im Seiteninhalt statt in der oberen Leiste\n- Funktioniert auch nach einem Seitenwechsel ohne Neuladen (Fokus lag vorher auf der unsichtbaren alten Seite)\n- Deutlicher Rahmen um das ausgewählte Element, solange per Fernbedienung gesteuert wird\n- Im TV-Layout, während der Wiedergabe und in Dialogen bleibt die Navigation wie bisher beim Web-Client\n- Diagnoseprotokoll (Plugin-Einstellungen → Fehlersuche): protokolliert gesendete und empfangene Befehle sowie Fokuswechsel, mit Knopf zum Kopieren",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.2.1/jellyfin-remote_1.2.1.0.zip",
+        "checksum": "4989426076ed20fe83cbeccec2571804",
+        "timestamp": "2026-10-16T14:30:51Z"
+      },
+      {
         "version": "1.2.0.0",
         "changelog": "- Suche auf dem Fernseher: Der Suchbegriff wird live an das Zielgerät übertragen, die Ergebnisse erscheinen dort; auf dem Handy bleibt ein kleines Steuerkreuz zum Auswählen (abschaltbar über den Schalter in der Suche)\n- Schnellerer Start: App-Dateien bleiben dauerhaft im Speicher und werden gleichzeitig geladen\n- Spulen braucht nur noch eine Anfrage an den Server\n- Plugin-Skript im Web-Client läuft immer (auch bei ausgeschaltetem Kopfzeilen-Symbol), damit automatische Anmeldung und Suche überall funktionieren",
         "targetAbi": "12.2.0.0",
