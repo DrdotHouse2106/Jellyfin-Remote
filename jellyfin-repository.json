@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/app/icons/icon-512.png",
     "versions": [
       {
+        "version": "1.1.0.0",
+        "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.1.0",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.1.0/jellyfin-remote_1.1.0.0.zip",
+        "checksum": "3c835466a10fbed74c785236d131dd36",
+        "timestamp": "2026-10-16T12:23:04Z"
+      },
+      {
         "version": "1.0.0.0",
         "changelog": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/tag/v1.0.0",
         "targetAbi": "12.2.0.0",
