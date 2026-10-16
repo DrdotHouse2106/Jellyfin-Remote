@@ -27,7 +27,7 @@
   <div class="app">
     <!-- Kopfzeile: aktuelles Zielgerät + Einstellungen -->
     <header class="topbar" id="topbar" hidden>
-      <a class="icon-btn" id="btn-back-jellyfin" href="../web/" aria-label="Zurück zu Jellyfin" title="Zurück zu Jellyfin" hidden>
+      <a class="icon-btn js-back-jellyfin" id="btn-back-jellyfin" href="../web/" aria-label="Zurück zu Jellyfin" title="Zurück zu Jellyfin" hidden>
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
       </a>
       <button class="device-chip" id="btn-change-device" type="button" aria-label="Zielgerät wechseln">
@@ -109,6 +109,7 @@
           </div>
         </form>
 
+        <a class="link-btn js-back-jellyfin" href="../web/" hidden>← Zurück zu Jellyfin</a>
         <button class="link-btn" id="btn-setup-back" type="button" hidden>← Zurück zur Fernbedienung</button>
         <button class="link-btn link-btn--danger" id="btn-logout" type="button" hidden>Abmelden &amp; Daten löschen</button>
       </section>

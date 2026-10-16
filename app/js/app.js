@@ -220,12 +220,7 @@ function init() {
     tab.addEventListener('click', () => app.show(tab.dataset.tab));
   });
 
-  // Aus Jellyfin heraus geöffnet (Link im Web-Client bzw. in der Jellyfin-App)? → Zurück-Button zeigen.
-  try {
-    $('#btn-back-jellyfin').hidden = !sessionStorage.getItem('jellyfin-remote.from-web');
-  } catch {
-    // sessionStorage nicht verfügbar – Button bleibt ausgeblendet.
-  }
+  setupBackToJellyfin();
 
   // Aktiviert :active-Zustände für Touch-Feedback in iOS Safari.
   document.addEventListener('touchstart', () => {}, { passive: true });
@@ -248,6 +243,27 @@ function init() {
 
   if (isNativeApp) listenForDeepLinks();
   registerServiceWorker();
+}
+
+/**
+ * „Zurück zu Jellyfin“: immer sichtbar, wenn die App über das Plugin auf dem
+ * Jellyfin-Server läuft (…/remote/). Kam man direkt aus Jellyfin, geht es per
+ * Verlauf zurück (Jellyfin bleibt dann so, wie man es verlassen hat), sonst zur Startseite.
+ */
+function setupBackToJellyfin() {
+  const servedByPlugin = !isNativeApp && /\/remote\/(index\.html)?$/.test(location.pathname);
+
+  document.querySelectorAll('.js-back-jellyfin').forEach((link) => {
+    link.hidden = !servedByPlugin;
+    link.addEventListener('click', (event) => {
+      const cameFromJellyfin = document.referrer && new URL(document.referrer).pathname.includes('/web/');
+      if (cameFromJellyfin && history.length > 1) {
+        event.preventDefault();
+        history.back();
+      }
+      // sonst folgt der Link normal zu ../web/
+    });
+  });
 }
 
 function registerServiceWorker() {
