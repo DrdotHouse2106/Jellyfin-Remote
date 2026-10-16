@@ -45,18 +45,33 @@ export function initRemoteView(app) {
     }
   });
 
-  /** Springt relativ zur aktuellen Position vor bzw. zurück. */
+  /** Zeitpunkt der letzten Aktualisierung von app.session (für die Positionsschätzung). */
+  let sessionUpdatedAt = 0;
+
+  /**
+   * Springt relativ zur aktuellen Position vor bzw. zurück. Die Position stammt aus der laufenden
+   * Aktualisierung (höchstens 2 s alt, um die vergangene Zeit ergänzt) – so genügt eine einzige Anfrage.
+   */
   async function seekBy(seconds) {
-    const session = await app.resolveSession();
+    let session = app.session;
+    if (!session?.PlayState || Date.now() - sessionUpdatedAt > 5000) {
+      session = await app.resolveSession();
+      sessionUpdatedAt = Date.now();
+    }
     const item = session?.NowPlayingItem;
     if (!item) throw new ApiError('Auf dem Gerät läuft gerade nichts.');
 
-    const position = session.PlayState?.PositionTicks ?? 0;
+    const elapsed = session.PlayState?.IsPaused ? 0 : (Date.now() - sessionUpdatedAt) * 10_000;
+    const position = (session.PlayState?.PositionTicks ?? 0) + elapsed;
     const duration = item.RunTimeTicks ?? Infinity;
     const target = Math.min(Math.max(0, position + seconds * TICKS_PER_SECOND), duration - TICKS_PER_SECOND);
 
-    await app.api.playstate(session.Id, 'Seek', { seekPositionTicks: Math.round(Math.max(0, target)) });
-    render({ ...session, PlayState: { ...session.PlayState, PositionTicks: target } });
+    const ticks = Math.round(Math.max(0, target));
+    await app.api.playstate(session.Id, 'Seek', { seekPositionTicks: ticks });
+    // Sofort anzeigen und als Ausgangspunkt für weitere Sprünge merken.
+    app.session = { ...session, PlayState: { ...session.PlayState, PositionTicks: ticks } };
+    sessionUpdatedAt = Date.now();
+    render(app.session);
   }
 
   // ---------- Lautstärke ----------
@@ -120,6 +135,7 @@ export function initRemoteView(app) {
     if (!app.session || document.visibilityState !== 'visible') return;
     try {
       render(await app.resolveSession());
+      sessionUpdatedAt = Date.now();
     } catch {
       // Netzwerkfehler beim Polling still ignorieren – der nächste Versuch folgt gleich.
     }

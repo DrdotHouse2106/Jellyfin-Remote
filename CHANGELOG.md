@@ -3,6 +3,13 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.2.0
+
+- Suche auf dem Fernseher: Der Suchbegriff wird live an das Zielgerät übertragen, die Ergebnisse erscheinen dort; auf dem Handy bleibt ein kleines Steuerkreuz zum Auswählen (abschaltbar über den Schalter in der Suche)
+- Schnellerer Start: App-Dateien bleiben dauerhaft im Speicher und werden gleichzeitig geladen
+- Spulen braucht nur noch eine Anfrage an den Server
+- Plugin-Skript im Web-Client läuft immer (auch bei ausgeschaltetem Kopfzeilen-Symbol), damit automatische Anmeldung und Suche überall funktionieren
+
 ## 1.1.4
 
 - Updates kommen sofort an: Die App wird unter einer Adresse mit Versionsnummer ausgeliefert, damit kein Zwischenspeicher (z. B. der Jellyfin-App auf dem iPhone) noch die alte Version zeigt

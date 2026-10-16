@@ -21,6 +21,16 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- Alle Module gleichzeitig laden statt nacheinander -->
+  <link rel="modulepreload" href="js/app.js">
+  <link rel="modulepreload" href="js/api.js">
+  <link rel="modulepreload" href="js/storage.js">
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/version.js">
+  <link rel="modulepreload" href="js/views/setup.js">
+  <link rel="modulepreload" href="js/views/sessions.js">
+  <link rel="modulepreload" href="js/views/remote.js">
+  <link rel="modulepreload" href="js/views/search.js">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -220,6 +230,34 @@
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
+        <label class="switch-row" id="search-on-tv-row" hidden>
+          <span class="switch-row__text">
+            <span class="switch-row__title">Auf dem Fernseher anzeigen</span>
+            <span class="switch-row__sub muted" id="search-on-tv-target"></span>
+          </span>
+          <input class="switch" id="search-on-tv" type="checkbox" role="switch">
+        </label>
+
+        <!-- Steuerung, während die Ergebnisse auf dem Zielgerät angezeigt werden -->
+        <div class="tv-search" id="tv-search" hidden>
+          <div class="mini-dpad" role="group" aria-label="Ergebnisse auf dem Fernseher auswählen">
+            <button class="key" data-cmd="MoveLeft" type="button" aria-label="Links">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <button class="key" data-cmd="MoveUp" type="button" aria-label="Hoch">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+            </button>
+            <button class="key key--ok" data-cmd="Select" type="button" aria-label="OK">OK</button>
+            <button class="key" data-cmd="MoveDown" type="button" aria-label="Runter">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <button class="key" data-cmd="MoveRight" type="button" aria-label="Rechts">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+          </div>
+          <button class="link-btn" data-cmd="Back" type="button">← Zurück auf dem Fernseher</button>
+        </div>
+
         <p class="empty" id="search-status">Tippe mindestens zwei Zeichen ein.</p>
         <div class="results" id="search-results" aria-live="polite"></div>
       </section>

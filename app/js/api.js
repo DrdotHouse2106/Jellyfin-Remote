@@ -266,6 +266,14 @@ export class JellyfinApi {
     return this.request(`/Sessions/${sessionId}/Command/${command}`, { method: 'POST' });
   }
 
+  /** Allgemeiner Befehl mit Argumenten, z. B. SendString { String: 'Text' }. */
+  sendCommand(sessionId, name, args = {}) {
+    return this.request(`/Sessions/${sessionId}/Command`, {
+      method: 'POST',
+      body: { Name: name, Arguments: args },
+    });
+  }
+
   /** Setzt die Lautstärke (0–100) auf dem Zielgerät. */
   setVolume(sessionId, volume) {
     return this.request(`/Sessions/${sessionId}/Command`, {

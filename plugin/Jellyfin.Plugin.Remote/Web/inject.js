@@ -2,15 +2,17 @@
  * Jellyfin Remote – Skript für den Jellyfin-Web-Client (läuft auch in den Jellyfin-Apps
  * für iOS und Android, da diese den Web-Client anzeigen).
  *
- * 1. Fügt in der Kopfzeile neben der Suche ein Fernbedienungs-Symbol ein.
+ * 1. Fügt in der Kopfzeile neben der Suche ein Fernbedienungs-Symbol ein (abschaltbar).
  * 2. Öffnet die Fernbedienung beim Tippen auf das Symbol oder den Menü-Eintrag
  *    direkt angemeldet: Über Quick Connect wird mit der bestehenden Anmeldung ein
  *    eigenes Zugangs-Token für die Fernbedienung ausgestellt – ohne Passwort.
+ * 3. Zeigt Suchbegriffe, die man auf dem Handy eingibt, direkt in der Suche dieses Geräts an.
  */
 (function () {
     'use strict';
 
     var BUTTON_ID = 'jellyfinRemoteHeaderButton';
+    var SHOW_HEADER_BUTTON = !/[?&]header=0\b/.test((document.currentScript && document.currentScript.src) || '');
     var APP_URL = new URL('../remote/', document.baseURI).href;
     var SERVER_URL = new URL('../', document.baseURI).href.replace(/\/+$/, '');
 
@@ -26,6 +28,57 @@
         'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
         '<rect x="6" y="2" width="12" height="20" rx="3"/><circle cx="12" cy="9" r="2.5"/>' +
         '<path d="M10 15h.01M14 15h.01M10 18h.01M14 18h.01"/></svg>';
+
+    // ---------- Suche vom Handy auf diesem Gerät anzeigen ----------
+    //
+    // Die Fernbedienung schickt den Suchbegriff per Jellyfin-Befehl „SendString“. Der Web-Client
+    // setzt den Text dabei nur ins Eingabefeld, ohne die Suche auszulösen. Deshalb lauschen wir
+    // auf der Live-Verbindung (WebSocket) mit und starten die Suche selbst.
+
+    var NativeWebSocket = window.WebSocket;
+
+    /**
+     * Die Suchseite des Web-Clients liest den Begriff aus der Adresse (#/search?query=…).
+     * location.replace ersetzt den Verlaufseintrag – so entsteht nicht pro Tastendruck ein „Zurück“-Schritt.
+     */
+    function applySearchText(text) {
+        var target = '#/search' + (text ? '?query=' + encodeURIComponent(text) : '');
+        if (location.hash === target) return;
+        if (/^#\/search/.test(location.hash)) {
+            location.replace(location.pathname + location.search + target);
+        } else {
+            location.hash = target;
+        }
+    }
+
+    function onServerMessage(event) {
+        var message;
+        try {
+            message = JSON.parse(event.data);
+        } catch (e) {
+            return;
+        }
+        if (message && message.MessageType === 'GeneralCommand' && message.Data && message.Data.Name === 'SendString') {
+            var text = (message.Data.Arguments && message.Data.Arguments.String) || '';
+            // Nach dem eigenen Handler des Web-Clients ausführen.
+            setTimeout(function () { applySearchText(text); }, 50);
+        }
+    }
+
+    if (NativeWebSocket) {
+        var PatchedWebSocket = function (url, protocols) {
+            var socket = protocols === undefined ? new NativeWebSocket(url) : new NativeWebSocket(url, protocols);
+            try {
+                if (/\/socket(\?|$)/.test(String(url))) socket.addEventListener('message', onServerMessage);
+            } catch (e) { /* ignorieren */ }
+            return socket;
+        };
+        PatchedWebSocket.prototype = NativeWebSocket.prototype;
+        ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach(function (key) {
+            PatchedWebSocket[key] = NativeWebSocket[key];
+        });
+        window.WebSocket = PatchedWebSocket;
+    }
 
     // ---------- Automatische Anmeldung ----------
 
@@ -215,6 +268,7 @@
     }
 
     function start() {
+        if (!SHOW_HEADER_BUTTON) return;
         new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
         update();
     }

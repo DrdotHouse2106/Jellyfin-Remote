@@ -43,7 +43,9 @@ public class RemoteController : ControllerBase
         // Versionierte Pfade (/remote/v1.2.3/js/app.js) liefern dieselben Dateien.
         // Jede Plugin-Version hat dadurch eigene Adressen – kein Browser- oder App-Zwischenspeicher
         // kann nach einem Update noch alte Dateien ausliefern (z. B. die Jellyfin-App auf dem iPhone).
-        path = VersionPrefix.Replace(path ?? string.Empty, string.Empty, 1);
+        var requested = path ?? string.Empty;
+        path = VersionPrefix.Replace(requested, string.Empty, 1);
+        var versioned = path.Length != requested.Length;
 
         if (string.IsNullOrEmpty(path))
         {
@@ -67,8 +69,9 @@ public class RemoteController : ControllerBase
             return Index();
         }
 
-        // Immer beim Server nachfragen (per ETag meist nur „304 Nicht geändert“).
-        return Asset("app/" + path, noCache: true);
+        // Versionierte Adressen ändern sich mit jedem Update → dürfen dauerhaft im Speicher bleiben
+        // (keine Nachfrage beim Server, schnelles Öffnen). Unversionierte immer neu prüfen.
+        return Asset("app/" + path, noCache: !versioned, immutable: versioned);
     }
 
     /// <summary>
@@ -127,7 +130,7 @@ public class RemoteController : ControllerBase
     [ApiExplorerSettings(IgnoreApi = true)]
     public IActionResult GetQrCodeScript() => Asset("web/qrcode.js", noCache: false);
 
-    private IActionResult Asset(string logicalName, bool noCache)
+    private IActionResult Asset(string logicalName, bool noCache, bool immutable = false)
     {
         var stream = EmbeddedAssets.Open(logicalName);
         if (stream is null)
@@ -135,7 +138,9 @@ public class RemoteController : ControllerBase
             return NotFound();
         }
 
-        Response.Headers.CacheControl = noCache ? "no-cache" : "public, max-age=86400";
+        Response.Headers.CacheControl = immutable
+            ? "public, max-age=31536000, immutable"
+            : noCache ? "no-cache" : "public, max-age=86400";
         return File(
             stream,
             EmbeddedAssets.GetContentType(logicalName),

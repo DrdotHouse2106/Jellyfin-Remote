@@ -19,7 +19,11 @@ public sealed class WebClientInjectionMiddleware
     /// <summary>Relativ zu /web/ – funktioniert dadurch auch mit einer konfigurierten Basis-URL.</summary>
     private const string AppUrl = "../remote/";
 
-    private const string ScriptTag = "<script defer src=\"../JellyfinRemote/inject.js\"></script>";
+    /// <summary>
+    /// Ohne „defer“ und direkt am Anfang von &lt;head&gt;: Das Skript muss laufen, bevor der Web-Client
+    /// seine Live-Verbindung (WebSocket) aufbaut, um Suchbefehle der Fernbedienung mitzulesen.
+    /// </summary>
+    private const string ScriptPath = "../JellyfinRemote/inject.js";
 
     private readonly RequestDelegate _next;
     private readonly IServerConfigurationManager _configurationManager;
@@ -59,11 +63,10 @@ public sealed class WebClientInjectionMiddleware
                     return;
                 }
             }
-            else if (config.ShowHeaderButton
-                && (path.Equals(webRoot, StringComparison.OrdinalIgnoreCase)
-                    || path.Equals(webRoot + "index.html", StringComparison.OrdinalIgnoreCase)))
+            else if (path.Equals(webRoot, StringComparison.OrdinalIgnoreCase)
+                || path.Equals(webRoot + "index.html", StringComparison.OrdinalIgnoreCase))
             {
-                if (await TryServeIndex(context).ConfigureAwait(false))
+                if (await TryServeIndex(context, config.ShowHeaderButton).ConfigureAwait(false))
                 {
                     return;
                 }
@@ -117,7 +120,7 @@ public sealed class WebClientInjectionMiddleware
         }
     }
 
-    private async Task<bool> TryServeIndex(HttpContext context)
+    private async Task<bool> TryServeIndex(HttpContext context, bool showHeaderButton)
     {
         try
         {
@@ -128,13 +131,17 @@ public sealed class WebClientInjectionMiddleware
             }
 
             var html = await File.ReadAllTextAsync(file, context.RequestAborted).ConfigureAwait(false);
-            var index = html.LastIndexOf("</head>", StringComparison.OrdinalIgnoreCase);
-            if (index < 0 || html.Contains(ScriptTag, StringComparison.Ordinal))
+            var index = html.IndexOf("<head>", StringComparison.OrdinalIgnoreCase);
+            if (index < 0 || html.Contains(ScriptPath, StringComparison.Ordinal))
             {
                 return false;
             }
 
-            await WriteAsync(context, html.Insert(index, ScriptTag), "text/html; charset=utf-8").ConfigureAwait(false);
+            // Das Skript läuft immer (automatische Anmeldung, Suche auf dem Fernseher);
+            // das Kopfzeilen-Symbol wird per Parameter ein- oder ausgeschaltet.
+            var scriptTag = $"<script src=\"{ScriptPath}?header={(showHeaderButton ? 1 : 0)}\"></script>";
+            var injected = html.Insert(index + "<head>".Length, scriptTag);
+            await WriteAsync(context, injected, "text/html; charset=utf-8").ConfigureAwait(false);
             return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
