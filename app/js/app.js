@@ -251,10 +251,13 @@ function init() {
  * Verlauf zurück (Jellyfin bleibt dann so, wie man es verlassen hat), sonst zur Startseite.
  */
 function setupBackToJellyfin() {
-  const servedByPlugin = !isNativeApp && /\/remote\/(index\.html)?$/.test(location.pathname);
+  const servedByPlugin = !isNativeApp && /\/remote\//.test(location.pathname);
+  // Absolut berechnen – relative Links würden sich auf die versionierte <base> beziehen.
+  const jellyfinUrl = location.pathname.replace(/\/remote\/.*$/, '/web/');
 
   document.querySelectorAll('.js-back-jellyfin').forEach((link) => {
     link.hidden = !servedByPlugin;
+    link.href = jellyfinUrl;
     link.addEventListener('click', (event) => {
       const cameFromJellyfin = document.referrer && new URL(document.referrer).pathname.includes('/web/');
       if (cameFromJellyfin && history.length > 1) {
@@ -270,7 +273,10 @@ function registerServiceWorker() {
   // In der nativen App (Capacitor) liegen die Dateien ohnehin lokal – kein Service Worker nötig.
   if (isNativeApp || !('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch((err) => {
+    // Immer …/remote/service-worker.js (nicht relativ zur versionierten <base>),
+    // damit der Service Worker für die ganze App unter /remote/ zuständig ist.
+    const appRoot = location.href.replace(/(\/remote\/).*$/, '$1');
+    navigator.serviceWorker.register(new URL('service-worker.js', appRoot)).catch((err) => {
       console.warn('Service Worker konnte nicht registriert werden:', err);
     });
   });

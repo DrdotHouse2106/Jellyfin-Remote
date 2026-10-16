@@ -10,7 +10,7 @@
  */
 
 // Wird beim Plugin-Release automatisch auf die Versionsnummer gesetzt.
-const CACHE_NAME = 'jellyfin-remote-1.1.3';
+const CACHE_NAME = 'jellyfin-remote-1.1.4';
 
 const APP_SHELL = [
   './',
@@ -59,6 +59,15 @@ self.addEventListener('fetch', (event) => {
   // Nur GET-Anfragen der eigenen Herkunft behandeln – alles andere (Jellyfin-API) geht direkt ans Netz.
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
+  // Versionierte Pfade (…/remote/v1.2.3/js/app.js) unter dem unversionierten Namen speichern.
+  const scope = self.registration.scope;
+  const cacheKey =
+    request.mode === 'navigate'
+      ? './index.html'
+      : url.href.startsWith(scope)
+        ? scope + url.href.slice(scope.length).replace(/^v\d[^/]*\//, '')
+        : request;
+
   // Netzwerk zuerst, bei fehlender Verbindung aus dem Zwischenspeicher.
   // cache: 'no-cache' lässt den Browser immer beim Server nachfragen (ETag → meist 304).
   const networkRequest = request.mode === 'navigate' ? request : new Request(request, { cache: 'no-cache' });
@@ -67,11 +76,10 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         if (response.ok) {
           const copy = response.clone();
-          const key = request.mode === 'navigate' ? './index.html' : request;
-          caches.open(CACHE_NAME).then((cache) => cache.put(key, copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(cacheKey, copy));
         }
         return response;
       })
-      .catch(() => caches.match(request.mode === 'navigate' ? './index.html' : request)),
+      .catch(() => caches.match(cacheKey)),
   );
 });

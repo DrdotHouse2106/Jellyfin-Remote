@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using MediaBrowser.Controller;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +16,10 @@ namespace Jellyfin.Plugin.Remote.Api;
 [AllowAnonymous]
 public class RemoteController : ControllerBase
 {
+    private static readonly Regex VersionPrefix = new(@"^v\d[^/]*/?", RegexOptions.Compiled);
+
+    private static readonly string AppVersion = typeof(Plugin).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+
     private readonly IServerApplicationHost _applicationHost;
 
     /// <summary>
@@ -35,6 +40,11 @@ public class RemoteController : ControllerBase
     [ApiExplorerSettings(IgnoreApi = true)]
     public IActionResult GetApp([FromRoute] string? path)
     {
+        // Versionierte Pfade (/remote/v1.2.3/js/app.js) liefern dieselben Dateien.
+        // Jede Plugin-Version hat dadurch eigene Adressen – kein Browser- oder App-Zwischenspeicher
+        // kann nach einem Update noch alte Dateien ausliefern (z. B. die Jellyfin-App auf dem iPhone).
+        path = VersionPrefix.Replace(path ?? string.Empty, string.Empty, 1);
+
         if (string.IsNullOrEmpty(path))
         {
             // "/remote" → "/remote/", damit relative Pfade in der App stimmen.
@@ -52,9 +62,38 @@ public class RemoteController : ControllerBase
             return NotFound();
         }
 
-        // Immer beim Server nachfragen (per ETag meist nur „304 Nicht geändert“) –
-        // so ist nach einem Plugin-Update sofort die neue App da.
+        if (path == "index.html")
+        {
+            return Index();
+        }
+
+        // Immer beim Server nachfragen (per ETag meist nur „304 Nicht geändert“).
         return Asset("app/" + path, noCache: true);
+    }
+
+    /// <summary>
+    /// index.html mit &lt;base href="…/remote/v{Version}/"&gt;: Alle relativen Adressen der App
+    /// (CSS, JavaScript-Module, Icons, Manifest) zeigen damit auf den versionierten Pfad.
+    /// </summary>
+    private IActionResult Index()
+    {
+        using var stream = EmbeddedAssets.Open("app/index.html");
+        if (stream is null)
+        {
+            return NotFound();
+        }
+
+        using var reader = new StreamReader(stream);
+        var html = reader.ReadToEnd();
+        var baseTag = $"<base href=\"{Request.PathBase}/remote/v{AppVersion}/\">";
+        var headIndex = html.IndexOf("<head>", StringComparison.OrdinalIgnoreCase);
+        if (headIndex >= 0)
+        {
+            html = html.Insert(headIndex + "<head>".Length, baseTag);
+        }
+
+        Response.Headers.CacheControl = "no-cache";
+        return Content(html, "text/html; charset=utf-8");
     }
 
     /// <summary>
@@ -69,7 +108,7 @@ public class RemoteController : ControllerBase
         var config = Plugin.Instance?.Configuration;
         return new RemotePluginInfo
         {
-            Version = typeof(Plugin).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
+            Version = AppVersion,
             ServerName = _applicationHost.FriendlyName,
             AppPath = "remote/",
             PublicUrl = string.IsNullOrWhiteSpace(config?.PublicUrl) ? null : config.PublicUrl.TrimEnd('/'),
