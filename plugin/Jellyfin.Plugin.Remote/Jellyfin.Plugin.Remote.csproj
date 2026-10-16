@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Jellyfin.Plugin.Remote</RootNamespace>
+    <!-- Wird von der GitHub Action beim Release überschrieben (-p:Version=…) -->
+    <Version>1.0.0</Version>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- Jellyfin stellt diese Bibliotheken zur Laufzeit selbst bereit -->
+    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="12.2.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Einstellungsseite im Jellyfin-Dashboard -->
+    <EmbeddedResource Include="Configuration\configPage.html" />
+    <!-- Skripte für den Jellyfin-Web-Client und die Einstellungsseite -->
+    <EmbeddedResource Include="Web\*.js" LogicalName="web/%(Filename)%(Extension)" />
+    <!-- Die komplette Fernbedienungs-App aus dem Ordner app/ -->
+    <EmbeddedResource Include="..\..\app\**\*" LogicalName="app/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

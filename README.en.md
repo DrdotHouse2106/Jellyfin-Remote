@@ -8,9 +8,9 @@ A minimalist Progressive Web App (PWA) that turns your phone into a remote contr
 
 It can be used in three ways:
 
-1. **In the browser from anywhere** – e.g. at `https://jellyfin.example.com/remote/`, right next to your Jellyfin
+1. **As a Jellyfin plugin** – the app is served directly by Jellyfin at `https://jellyfin.example.com/remote/` and linked in the web client. No extra server, no Docker, no proxy changes.
 2. **As an installed PWA** – Safari → Share → "Add to Home Screen"
-3. **As a native iPhone app** – the same code, built with [Capacitor](https://capacitorjs.com) in Xcode
+3. **As a native iPhone app** – the same code, built with [Capacitor](https://capacitorjs.com) in Xcode; pairs with the plugin via QR code
 
 ## Features
 
@@ -21,11 +21,20 @@ It can be used in three ways:
 - **Playback** – play/pause, skip ±10 s, stop, volume slider, mute.
 - **Now playing** – title, artwork and progress, refreshed every 2 seconds.
 
-## Hosting at `jellyfin.example.com/remote`
+## Jellyfin plugin (Jellyfin 12.2+)
 
-1. Start the container: `docker compose up -d --build` (serves the app at `http://<host>:8097/remote/`). Without Docker, copy the contents of `app/` to your web server.
-2. Route `/remote/` in your reverse proxy to the container and everything else to Jellyfin as before. Examples for Nginx and Caddy are in [`deploy/`](deploy/); the German README also covers Nginx Proxy Manager and Traefik.
-3. Open `https://jellyfin.example.com/remote` in Safari, sign in, then Share → "Add to Home Screen".
+1. In the dashboard go to **Plugins → Repositories → "+"** and add
+   `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/jellyfin-repository.json`
+2. Install **Jellyfin Remote** from the catalog and restart Jellyfin.
+3. Open `https://jellyfin.example.com/remote` and sign in with your Jellyfin account.
+
+The plugin
+- serves the app at `/remote/` (server URL is detected automatically, base URLs are supported),
+- adds a "Fernbedienung" (remote) entry to the web client menu and a remote icon next to the search button – without modifying any files on disk,
+- has a settings page with QR codes to open the web app or pair the iPhone app (`jellyfinremote://connect?server=…`),
+- exposes `GET /JellyfinRemote/Info` so the apps can detect it.
+
+New releases are built by the GitHub Action in `.github/workflows/plugin-release.yml` when a tag like `v1.0.1` is pushed.
 
 ## Building the native iPhone app
 
@@ -33,13 +42,13 @@ Requires a Mac with Xcode and Node.js 20+.
 
 ```bash
 npm install
-npm run ios:add      # creates ios/ plus app icons and splash screens
+npm run ios:add      # creates ios/, the URL scheme, app icons and splash screens
 npm run ios:open     # opens Xcode
 ```
 
 In Xcode select your team under *Signing & Capabilities*, connect your iPhone and press **Run**. After code changes run `npm run ios:sync`. A free Apple ID lets you run the app on your own device for 7 days at a time; the Apple Developer Program removes that limit and enables TestFlight/App Store.
 
-In the native app the server URL has to be entered once (e.g. `https://jellyfin.example.com`). iOS only allows HTTPS by default; plain-HTTP servers require an `NSAppTransportSecurity` exception in `Info.plist`.
+The iPhone app needs no server of its own – all files are bundled. Scan the pairing QR code from the plugin settings to fill in the server URL, or enter it once by hand. iOS only allows HTTPS by default; plain-HTTP servers require an `NSAppTransportSecurity` exception in `Info.plist`.
 
 ## Security
 

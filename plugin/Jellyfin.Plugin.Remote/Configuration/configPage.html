@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Jellyfin Remote</title>
+</head>
+<body>
+    <div id="jellyfinRemoteConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Jellyfin Remote</h2>
+                    <p>
+                        Die Fernbedienung ist erreichbar unter
+                        <a id="jfrAppLink" class="button-link" href="../remote/" target="_blank" rel="noopener">…/remote/</a>
+                    </p>
+                </div>
+
+                <form id="jfrConfigForm">
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Link im Web-Client</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="jfrShowMenuLink" type="checkbox" is="emby-checkbox">
+                                <span>Link im Seitenmenü anzeigen</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Fügt im Menü des Jellyfin-Web-Clients einen Eintrag hinzu, der die Fernbedienung öffnet.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="jfrMenuLinkName">Beschriftung im Menü</label>
+                            <input id="jfrMenuLinkName" type="text" is="emby-input" placeholder="Fernbedienung">
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="jfrShowHeaderButton" type="checkbox" is="emby-checkbox">
+                                <span>Symbol in der Kopfzeile anzeigen</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Zeigt neben der Suche ein Fernbedienungs-Symbol an.
+                            </div>
+                        </div>
+
+                        <div class="fieldDescription">
+                            Änderungen werden nach dem Neuladen des Web-Clients sichtbar (am Computer Strg + F5, in Apps neu starten).
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Öffentliche Adresse</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="jfrPublicUrl">Server-URL</label>
+                            <input id="jfrPublicUrl" type="url" is="emby-input" placeholder="https://jellyfin.example.de">
+                            <div class="fieldDescription">
+                                Adresse, unter der dein Server von außen erreichbar ist. Wird für die QR-Codes und die
+                                Kopplung mit der iPhone-App verwendet. Leer lassen, um die aktuelle Adresse zu verwenden.
+                            </div>
+                        </div>
+                    </div>
+
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Speichern</span>
+                    </button>
+                </form>
+
+                <div class="verticalSection" style="margin-top: 2em;">
+                    <h3 class="sectionTitle">Mit dem Smartphone verbinden</h3>
+                    <p class="fieldDescription">QR-Code mit der Kamera des iPhones scannen.</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 2em;">
+                        <figure style="margin: 0; text-align: center;">
+                            <div id="jfrQrWeb" style="width: 180px; height: 180px; background: #fff; border-radius: 8px;"></div>
+                            <figcaption style="margin-top: .5em;">Im Browser öffnen</figcaption>
+                        </figure>
+                        <figure style="margin: 0; text-align: center;">
+                            <div id="jfrQrApp" style="width: 180px; height: 180px; background: #fff; border-radius: 8px;"></div>
+                            <figcaption style="margin-top: .5em;">In der iPhone-App verbinden</figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function () {
+                'use strict';
+
+                var pluginId = 'e7f6d1e2-2069-4a41-804f-19632a1e5966';
+                var page = document.querySelector('#jellyfinRemoteConfigPage');
+                var form = page.querySelector('#jfrConfigForm');
+
+                /** Öffentliche Adresse oder – falls leer – die Adresse, unter der das Dashboard läuft. */
+                function serverUrl(config) {
+                    var url = (config.PublicUrl || '').trim().replace(/\/+$/, '');
+                    return url || ApiClient.serverAddress().replace(/\/+$/, '');
+                }
+
+                function loadQrLibrary() {
+                    if (window.qrcode) return Promise.resolve();
+                    return new Promise(function (resolve, reject) {
+                        var script = document.createElement('script');
+                        script.src = ApiClient.getUrl('JellyfinRemote/qrcode.js');
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+
+                function drawQr(selector, text) {
+                    var qr = window.qrcode(0, 'M');
+                    qr.addData(text);
+                    qr.make();
+                    var target = page.querySelector(selector);
+                    target.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+                    target.title = text;
+                }
+
+                function render(config) {
+                    var base = serverUrl(config);
+                    var appUrl = base + '/remote/';
+                    var link = page.querySelector('#jfrAppLink');
+                    link.href = appUrl;
+                    link.textContent = appUrl;
+
+                    loadQrLibrary().then(function () {
+                        drawQr('#jfrQrWeb', appUrl);
+                        // Eigenes URL-Schema der iPhone-App – öffnet die App und trägt die Server-URL ein.
+                        drawQr('#jfrQrApp', 'jellyfinremote://connect?server=' + encodeURIComponent(base));
+                    }).catch(function () {
+                        page.querySelector('#jfrQrWeb').textContent = 'QR-Code konnte nicht geladen werden.';
+                    });
+                }
+
+                page.addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        page.querySelector('#jfrShowMenuLink').checked = config.ShowMenuLink;
+                        page.querySelector('#jfrShowHeaderButton').checked = config.ShowHeaderButton;
+                        page.querySelector('#jfrMenuLinkName').value = config.MenuLinkName || '';
+                        page.querySelector('#jfrPublicUrl').value = config.PublicUrl || '';
+                        render(config);
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.ShowMenuLink = page.querySelector('#jfrShowMenuLink').checked;
+                        config.ShowHeaderButton = page.querySelector('#jfrShowHeaderButton').checked;
+                        config.MenuLinkName = page.querySelector('#jfrMenuLinkName').value.trim();
+                        config.PublicUrl = page.querySelector('#jfrPublicUrl').value.trim();
+                        return ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                            render(config);
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                    return false;
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>

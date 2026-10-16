@@ -3,7 +3,7 @@
  * und verwaltet das aktuell gewählte Zielgerät.
  */
 
-import { JellyfinApi, ApiError, isNativeApp } from './api.js';
+import { JellyfinApi, ApiError, isNativeApp, normalizeServerUrl } from './api.js';
 import { loadConfig, saveConfig, clearConfig, getDeviceId } from './storage.js';
 import { $, toast } from './ui.js';
 import { initSetupView } from './views/setup.js';
@@ -24,6 +24,8 @@ const app = {
   session: null,
   views: {},
   currentView: null,
+  /** Server-URL aus QR-Code (?server=…) oder Deep-Link, die im Setup vorausgefüllt wird. */
+  pendingServerUrl: null,
 
   /**
    * Speichert die Zugangsdaten und erstellt den API-Client.
@@ -160,6 +162,48 @@ function setOnline(online) {
   dot.classList.toggle('is-offline', online === false);
 }
 
+// ---------- Kopplung (QR-Code / Deep-Link) ----------
+
+/**
+ * Übernimmt eine Server-URL aus einem Link, z. B.
+ *   https://jellyfin.example.de/remote/?server=https://jellyfin.example.de
+ *   jellyfinremote://connect?server=https://jellyfin.example.de   (iPhone-App)
+ * @returns {boolean} true, wenn die Einrichtung geöffnet werden soll.
+ */
+function applyServerLink(link) {
+  let server;
+  try {
+    server = new URL(link).searchParams.get('server');
+    if (!server) return false;
+    server = normalizeServerUrl(server);
+  } catch {
+    return false;
+  }
+
+  // Bereits mit genau diesem Server verbunden → nichts zu tun.
+  if (server === app.config.serverUrl && app.config.token) return false;
+  app.pendingServerUrl = server;
+  return true;
+}
+
+function openSetupForPendingServer() {
+  if (app.currentView === 'setup') app.views.setup.onShow();
+  else app.show('setup');
+}
+
+/** In der nativen App: Links mit dem Schema jellyfinremote:// verarbeiten. */
+function listenForDeepLinks() {
+  const AppPlugin = window.Capacitor?.Plugins?.App;
+  if (!AppPlugin) return;
+
+  AppPlugin.addListener('appUrlOpen', ({ url }) => {
+    if (applyServerLink(url)) openSetupForPendingServer();
+  });
+  AppPlugin.getLaunchUrl?.().then((result) => {
+    if (result?.url && applyServerLink(result.url)) openSetupForPendingServer();
+  });
+}
+
 // ---------- Start ----------
 
 function init() {
@@ -179,20 +223,23 @@ function init() {
   // Aktiviert :active-Zustände für Touch-Feedback in iOS Safari.
   document.addEventListener('touchstart', () => {}, { passive: true });
 
+  // ?server=… aus dem QR-Code übernehmen und aus der Adresszeile entfernen.
+  const fromLink = applyServerLink(location.href);
+  if (location.search.includes('server=')) history.replaceState(null, '', location.pathname);
+
   const { serverUrl, token, targetDeviceId, targetSessionId, targetName } = app.config;
-  if (!serverUrl || !token) {
-    app.show('setup');
-  } else {
+  if (serverUrl && token) {
     app.api = createApi(serverUrl, token);
     if (targetDeviceId || targetSessionId) {
       app.session = { Id: targetSessionId, DeviceId: targetDeviceId, DeviceName: targetName };
-      app.show('remote');
-    } else {
-      app.show('sessions');
     }
   }
+
+  if (fromLink || !app.api) app.show('setup');
+  else app.show(app.session ? 'remote' : 'sessions');
   updateDeviceChip();
 
+  if (isNativeApp) listenForDeepLinks();
   registerServiceWorker();
 }
 

@@ -2,3 +2,7 @@ node_modules/
 # Wird auf dem Mac per "npm run ios:add" erzeugt
 ios/
 .DS_Store
+# Build-Ausgaben des Plugins
+plugin/**/bin/
+plugin/**/obj/
+plugin/dist/

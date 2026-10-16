@@ -50,7 +50,12 @@ export function initSetupView(app) {
       setStatus(`✓ Token gültig – „${info.ServerName}“ · Jellyfin ${info.Version}`, 'ok');
     } else {
       const info = await createApi(serverUrl).getPublicSystemInfo();
-      setStatus(`✓ Server „${info.ServerName}“ erreichbar · Jellyfin ${info.Version}`, 'ok');
+      const plugin = await createApi(serverUrl).getPluginInfo().catch(() => null);
+      setStatus(
+        `✓ Server „${info.ServerName}“ erreichbar · Jellyfin ${info.Version}` +
+          (plugin?.Version ? ` · Remote-Plugin ${plugin.Version}` : ''),
+        'ok',
+      );
     }
   }
 
@@ -84,17 +89,21 @@ export function initSetupView(app) {
   }
 
   /**
-   * Läuft die App auf derselben Domain wie Jellyfin (z. B. jellyfin.example.de/remote/),
-   * wird die Server-URL automatisch erkannt und vorausgefüllt.
+   * Läuft die App auf derselben Domain wie Jellyfin (z. B. über das Plugin unter
+   * jellyfin.example.de/remote/), wird die Server-URL automatisch erkannt und vorausgefüllt.
+   * Eine Basis-URL wie /jellyfin/remote/ wird dabei berücksichtigt.
    */
   async function detectServer() {
     if (isNativeApp || !/^https?:$/.test(location.protocol)) return;
+    const basePath = location.pathname.includes('/remote/') ? location.pathname.replace(/\/remote\/.*$/, '') : '';
+    const candidate = location.origin + basePath;
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
     try {
-      const info = await createApi(location.origin).getPublicSystemInfo({ signal: controller.signal });
+      const info = await createApi(candidate).getPublicSystemInfo({ signal: controller.signal });
       if (info?.ServerName && !urlInput.value) {
-        urlInput.value = location.origin;
+        urlInput.value = candidate;
         setStatus(`Server „${info.ServerName}“ erkannt.`, 'ok');
       }
     } catch {
@@ -149,7 +158,16 @@ export function initSetupView(app) {
       $('#btn-setup-back').hidden = !token;
 
       if (token && authMode === 'user') setStatus(`Angemeldet als ${userName}.`, 'ok');
-      if (!serverUrl) detectServer();
+
+      // Server-URL aus QR-Code bzw. Deep-Link der iPhone-App übernehmen.
+      const suggested = app.pendingServerUrl;
+      app.pendingServerUrl = null;
+      if (suggested) {
+        urlInput.value = suggested;
+        setStatus('Server-URL übernommen – bitte anmelden.', 'ok');
+      } else if (!serverUrl) {
+        detectServer();
+      }
     },
   };
 }

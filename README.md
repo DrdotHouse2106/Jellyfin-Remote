@@ -6,9 +6,9 @@ Eine minimalistische Progressive Web App (PWA), die dein Smartphone in eine Fern
 
 Die App lässt sich auf drei Arten nutzen:
 
-1. **Von überall im Browser** – z. B. unter `https://jellyfin.example.de/remote/`, direkt neben deinem Jellyfin
+1. **Als Jellyfin-Plugin** – die App ist danach direkt unter `https://jellyfin.example.de/remote/` erreichbar und im Jellyfin-Menü verlinkt. Kein zusätzlicher Server, kein Docker, keine Proxy-Änderung.
 2. **Als installierte PWA** – in Safari „Zum Home-Bildschirm“, startet im Vollbild wie eine echte App
-3. **Als native iPhone-App** – derselbe Code, mit [Capacitor](https://capacitorjs.com) in Xcode gebaut
+3. **Als native iPhone-App** – derselbe Code, mit [Capacitor](https://capacitorjs.com) in Xcode gebaut. Arbeitet mit dem Plugin zusammen (Kopplung per QR-Code).
 
 ## Funktionen
 
@@ -23,98 +23,72 @@ Die App lässt sich auf drei Arten nutzen:
 ## Projektstruktur
 
 ```
-├── app/                      Die eigentliche App (nur dieser Ordner wird ausgeliefert)
-│   ├── index.html            Grundgerüst mit allen Ansichten
-│   ├── manifest.json         Web-App-Manifest
-│   ├── service-worker.js     Offline-Cache der App-Shell
-│   ├── css/style.css         Dunkles, responsives Design
-│   ├── icons/                App-Icons
-│   └── js/
-│       ├── app.js            Einstieg, Zustand, Navigation, Zielgerät
-│       ├── api.js            Jellyfin-API-Client
-│       ├── storage.js        localStorage-Zugriff
-│       ├── ui.js             UI-Hilfsfunktionen
-│       └── views/            setup.js · sessions.js · remote.js · search.js
-├── deploy/                   Nginx- und Caddy-Konfigurationen
-├── Dockerfile                Container, der die App unter /remote/ ausliefert
-├── docker-compose.yml
-├── capacitor.config.json     Konfiguration für die native iOS-App
-├── package.json              Capacitor-Abhängigkeiten und Skripte
-└── resources/                Quellbilder für App-Icon und Startbildschirm (iOS)
+├── app/                          Die eigentliche App (HTML, CSS, JavaScript)
+│   ├── index.html · manifest.json · service-worker.js
+│   ├── css/ · icons/
+│   └── js/                       app.js · api.js · storage.js · ui.js · views/
+├── plugin/Jellyfin.Plugin.Remote/  Jellyfin-Plugin (C#, .NET 10)
+│   ├── Plugin.cs                 Plugin-Definition und Einstellungsseite
+│   ├── Api/RemoteController.cs   liefert die App unter /remote/ aus
+│   ├── Middleware/               ergänzt den Web-Client um den Fernbedienungs-Link
+│   ├── Configuration/            Einstellungen und Einstellungsseite (mit QR-Codes)
+│   └── Web/                      Kopfzeilen-Skript, QR-Code-Bibliothek
+├── jellyfin-repository.json      Plugin-Repository für Jellyfin
+├── .github/workflows/            baut das Plugin bei jedem Release
+├── capacitor.config.json         Konfiguration der iPhone-App
+├── scripts/ios-configure.mjs     ergänzt das iOS-Projekt (URL-Schema)
+└── resources/                    App-Icon und Startbildschirm (iOS)
 ```
 
 ---
 
-## Von überall erreichbar: `jellyfin.example.de/remote`
+## Jellyfin-Plugin
 
-Am einfachsten betreibst du die App auf **derselben Domain wie Jellyfin**. Vorteile:
+Das Plugin enthält die komplette App und liefert sie direkt über Jellyfin aus – unter derselben Adresse wie dein Server, z. B. `https://jellyfin.ulber.me/remote/`. Da Jellyfin selbst die Dateien ausliefert, brauchst du weder Docker noch eine Änderung am Reverse-Proxy.
 
-- HTTPS-Zertifikat ist bereits vorhanden
-- keine CORS- oder Mixed-Content-Probleme
-- die Server-URL wird beim ersten Start automatisch erkannt – du musst dich nur noch anmelden
-- der Offline-Cache (Service Worker) funktioniert, weil HTTPS
+**Voraussetzung:** Jellyfin **12.2** oder neuer.
 
-Im Folgenden steht `jellyfin.example.de` für deine Domain (z. B. `jellyfin.ulber.me`).
+### Installation
 
-### Schritt 1: App starten
+1. Im Jellyfin-Dashboard **Plugins → Repositories → „+“** wählen und eintragen:
+   - Name: `Jellyfin Remote`
+   - URL: `https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/jellyfin-repository.json`
+2. Unter **Plugins → Katalog** das Plugin **Jellyfin Remote** installieren.
+3. Jellyfin **neu starten**.
+4. Fertig: `https://jellyfin.example.de/remote` öffnen und mit deinem Jellyfin-Konto anmelden.
 
-**Variante A – Docker (empfohlen):**
+Updates erscheinen danach automatisch im Dashboard.
+
+### Was das Plugin macht
+
+- **App unter `/remote/`** – die Server-URL wird automatisch erkannt (auch mit konfigurierter Basis-URL), du musst dich nur noch anmelden.
+- **Link im Web-Client** – ein Eintrag „Fernbedienung“ im Seitenmenü und ein Fernbedienungs-Symbol neben der Suche in der Kopfzeile. Beides lässt sich in den Plugin-Einstellungen abschalten. Die Dateien des Web-Clients werden dabei **nicht verändert** – das Plugin ergänzt sie nur bei der Auslieferung.
+- **Einstellungsseite** (Dashboard → Plugins → Jellyfin Remote, oder im Dashboard-Menü „Fernbedienung“) mit zwei QR-Codes:
+  - **Im Browser öffnen** – öffnet die Web-App auf dem Smartphone.
+  - **In der iPhone-App verbinden** – öffnet die iPhone-App und trägt die Server-URL automatisch ein.
+- **Öffentliche Adresse** – trage dort z. B. `https://jellyfin.ulber.me` ein, damit die QR-Codes auch dann stimmen, wenn du das Dashboard im Heimnetz über die IP-Adresse aufrufst.
+- **Info-Endpunkt** `GET /JellyfinRemote/Info` – die iPhone-App erkennt darüber, dass das Plugin installiert ist.
+
+Nach dem Ein- oder Ausschalten der Links den Web-Client neu laden (am Computer **Strg + F5**).
+
+### Neue Version veröffentlichen
+
+Die GitHub Action [`.github/workflows/plugin-release.yml`](.github/workflows/plugin-release.yml) baut das Plugin, erstellt ein GitHub-Release und aktualisiert `jellyfin-repository.json`:
 
 ```bash
-git clone https://github.com/DrdotHouse2106/Jellyfin-Remote.git
-cd Jellyfin-Remote
-docker compose up -d --build
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
-Der Container liefert die App unter `http://<server>:8097/remote/` aus. Updates: `git pull && docker compose up -d --build`.
+Alternativ unter **Actions → Plugin-Release → Run workflow** eine Version eingeben.
 
-**Variante B – ohne Docker:** Den Inhalt des Ordners `app/` in ein Verzeichnis des Webservers kopieren, z. B. `/var/www/jellyfin-remote/`.
+### Manuell installieren (ohne Repository)
 
-### Schritt 2: Reverse-Proxy um `/remote` erweitern
-
-Alle anderen Pfade gehen wie bisher an Jellyfin – nur `/remote/` geht an die App.
-
-**Nginx** (Ausschnitt, vollständiges Beispiel in [`deploy/nginx-reverse-proxy.conf`](deploy/nginx-reverse-proxy.conf)) – in den bestehenden `server`-Block von Jellyfin einfügen:
-
-```nginx
-location = /remote { return 301 /remote/; }
-location /remote/ {
-    proxy_pass http://127.0.0.1:8097;   # ohne abschließenden Pfad – /remote/ bleibt erhalten
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
+```bash
+npm run plugin:build      # oder: dotnet publish plugin/Jellyfin.Plugin.Remote -c Release -o plugin/dist
 ```
 
-**Caddy** ([`deploy/Caddyfile`](deploy/Caddyfile)):
-
-```caddy
-jellyfin.example.de {
-	redir /remote /remote/
-	reverse_proxy /remote/* 127.0.0.1:8097
-	reverse_proxy 127.0.0.1:8096
-}
-```
-
-**Nginx Proxy Manager:** Beim Proxy-Host von Jellyfin den Tab **Custom Locations** öffnen → Location `/remote` → Scheme `http`, Forward Hostname `jellyfin-remote` (bzw. IP des Docker-Hosts), Forward Port `80` (bzw. `8097`). Liegen beide Container im selben Docker-Netzwerk, in `docker-compose.yml` das Netzwerk eintragen (siehe Kommentar dort).
-
-**Traefik** (Labels für den Container in `docker-compose.yml`):
-
-```yaml
-labels:
-  - traefik.enable=true
-  - traefik.http.routers.jellyfin-remote.rule=Host(`jellyfin.example.de`) && PathPrefix(`/remote`)
-  - traefik.http.routers.jellyfin-remote.entrypoints=websecure
-  - traefik.http.routers.jellyfin-remote.tls.certresolver=letsencrypt
-  - traefik.http.services.jellyfin-remote.loadbalancer.server.port=80
-```
-
-> Hat dein Proxy eine `Content-Security-Policy` für die ganze Domain gesetzt (wie in manchen Jellyfin-Anleitungen), muss sie `'self'` für Skripte, Styles und Bilder erlauben – die App lädt nichts von fremden Servern.
-
-### Schritt 3: Anmelden und installieren
-
-1. `https://jellyfin.example.de/remote` in **Safari** öffnen – die Server-URL ist bereits eingetragen.
-2. Mit Jellyfin-Benutzername und Passwort anmelden.
-3. **Teilen** → **„Zum Home-Bildschirm“** – fertig.
+Die Datei `plugin/dist/Jellyfin.Plugin.Remote.dll` in einen neuen Ordner `plugins/JellyfinRemote/` im Jellyfin-Datenverzeichnis kopieren (bei Docker meist `/config/plugins/`) und Jellyfin neu starten.
 
 ---
 
@@ -131,7 +105,7 @@ Die App ist für [Capacitor](https://capacitorjs.com) vorbereitet. Capacitor ver
 
 ```bash
 npm install
-npm run ios:add      # erzeugt den Ordner ios/ und die App-Icons/Startbildschirme
+npm run ios:add      # erzeugt den Ordner ios/, das URL-Schema sowie Icons und Startbildschirme
 npm run ios:open     # öffnet das Projekt in Xcode
 ```
 
@@ -152,7 +126,8 @@ Dann in Xcode erneut **▶ Run**.
 
 ### Hinweise zur nativen App
 
-- Die Server-URL muss in der App **einmalig eingegeben** werden (z. B. `https://jellyfin.example.de`) – eine automatische Erkennung ist hier nicht möglich.
+- **Kopplung mit dem Plugin:** In den Plugin-Einstellungen den QR-Code „In der iPhone-App verbinden“ mit der Kamera scannen – die App öffnet sich und die Server-URL ist eingetragen (URL-Schema `jellyfinremote://connect?server=…`). Ohne Plugin gibst du die Server-URL einmalig von Hand ein.
+- Die iPhone-App braucht **keinen eigenen Server** – alle App-Dateien sind in der App enthalten, sie spricht direkt mit Jellyfin.
 - Die App sendet Anfragen von einem eigenen Ursprung (`capacitor://localhost`) an Jellyfin. Jellyfin erlaubt solche Anfragen standardmäßig (CORS). Falls dein Reverse-Proxy CORS-Header entfernt oder überschreibt, müssen sie dort erlaubt werden.
 - iOS erlaubt standardmäßig nur **HTTPS**-Verbindungen. Für einen reinen HTTP-Server im Heimnetz muss in `ios/App/App/Info.plist` unter `NSAppTransportSecurity` der Schlüssel `NSAllowsLocalNetworking` bzw. `NSAllowsArbitraryLoads` gesetzt werden.
 - Der Ordner `ios/` wird lokal erzeugt und ist per `.gitignore` ausgeschlossen. Wer ihn versionieren möchte, entfernt den Eintrag.
@@ -174,6 +149,7 @@ Nach Änderungen an den App-Dateien die Konstante `CACHE_NAME` in `app/service-w
 | Funktion | Endpunkt |
 | --- | --- |
 | Server erkennen | `GET /System/Info/Public` |
+| Plugin erkennen | `GET /JellyfinRemote/Info` (nur mit Plugin) |
 | Anmeldung | `POST /Users/AuthenticateByName` |
 | Abmeldung | `POST /Sessions/Logout` |
 | Token prüfen | `GET /System/Info` |
@@ -195,8 +171,10 @@ Da Jellyfin bei jeder Neuverbindung eines Clients eine neue Sitzungs-ID vergibt,
 - Das Token liegt im `localStorage` des Browsers bzw. der App. Dieser Speicher ist **nicht verschlüsselt** – wer Zugriff auf das entsperrte Gerät hat, kann es auslesen.
 - Wird das Token widerrufen, leitet die App automatisch zur Anmeldung zurück.
 - Für den Zugriff von außen ist **HTTPS Pflicht**, sonst würden Passwort und Token unverschlüsselt übertragen.
+- Die vom Plugin ausgelieferten Dateien (`/remote/…`, `/JellyfinRemote/…`) sind ohne Anmeldung abrufbar – sie enthalten nur die App selbst, keine Daten deines Servers. Alles Weitere erfordert die normale Jellyfin-Anmeldung.
 
 ## Voraussetzungen
 
-- Jellyfin 10.8 oder neuer (getestet mit der API von 10.10)
+- Plugin: Jellyfin 12.2 oder neuer
+- App ohne Plugin: Jellyfin 10.8 oder neuer
 - Ein steuerbarer Client auf dem Zielgerät (z. B. Jellyfin für Android TV, Jellyfin Web im Browser des Fernsehers, Jellyfin Media Player)

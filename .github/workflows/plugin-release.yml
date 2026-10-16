@@ -1,0 +1,116 @@
+# Baut das Jellyfin-Plugin und veröffentlicht es als GitHub-Release.
+# Anschließend wird jellyfin-repository.json aktualisiert – diese Datei trägt man
+# in Jellyfin unter Dashboard → Plugins → Repositories ein.
+#
+# Auslösen: Tag pushen, z. B.  git tag v1.0.1 && git push origin v1.0.1
+name: Plugin-Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (z. B. 1.0.1)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TARGET_ABI: '12.2.0.0'
+  PLUGIN_GUID: 'e7f6d1e2-2069-4a41-804f-19632a1e5966'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Version ermitteln
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip=jellyfin-remote_$VERSION.0.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Plugin bauen
+        run: dotnet publish plugin/Jellyfin.Plugin.Remote -c Release -o build -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Paket erstellen
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}.0"
+          TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          mkdir -p package
+          cp build/Jellyfin.Plugin.Remote.dll package/
+          cat > package/meta.json <<JSON
+          {
+            "category": "General",
+            "changelog": "Siehe https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}",
+            "description": "Fernbedienung und Mediathek-Browser für Smartphones – erreichbar unter /remote/.",
+            "guid": "${PLUGIN_GUID}",
+            "name": "Jellyfin Remote",
+            "overview": "Smartphone-Fernbedienung für Jellyfin",
+            "owner": "${{ github.repository_owner }}",
+            "targetAbi": "${TARGET_ABI}",
+            "timestamp": "${TIMESTAMP}",
+            "version": "${VERSION}",
+            "status": "Active",
+            "autoUpdate": true,
+            "assemblies": []
+          }
+          JSON
+          (cd package && zip -q "../${{ steps.version.outputs.zip }}" *)
+          echo "checksum=$(md5sum ${{ steps.version.outputs.zip }} | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "timestamp=$TIMESTAMP" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub-Release erstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: main
+          name: Jellyfin Remote ${{ steps.version.outputs.version }}
+          files: ${{ steps.version.outputs.zip }}
+          generate_release_notes: true
+
+      - name: Repository-Datei aktualisieren
+        env:
+          VERSION: ${{ steps.version.outputs.version }}.0
+          SOURCE_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/${{ steps.version.outputs.zip }}
+          CHECKSUM: ${{ steps.package.outputs.checksum }}
+          TIMESTAMP: ${{ steps.package.outputs.timestamp }}
+          CHANGELOG: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          path = 'jellyfin-repository.json'
+          repo = json.load(open(path, encoding='utf-8'))
+          plugin = next(p for p in repo if p['guid'] == os.environ['PLUGIN_GUID'])
+          plugin['versions'] = [v for v in plugin['versions'] if v['version'] != os.environ['VERSION']]
+          plugin['versions'].insert(0, {
+              'version': os.environ['VERSION'],
+              'changelog': os.environ['CHANGELOG'],
+              'targetAbi': os.environ['TARGET_ABI'],
+              'sourceUrl': os.environ['SOURCE_URL'],
+              'checksum': os.environ['CHECKSUM'],
+              'timestamp': os.environ['TIMESTAMP'],
+          })
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump(repo, f, indent=2, ensure_ascii=False)
+              f.write('\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add jellyfin-repository.json
+          git commit -m "Plugin-Repository: Version ${{ steps.version.outputs.version }}"
+          git push origin main

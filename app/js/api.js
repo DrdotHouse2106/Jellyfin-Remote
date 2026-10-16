@@ -127,6 +127,11 @@ export class JellyfinApi {
     return this.request('/System/Info');
   }
 
+  /** Informationen des Jellyfin-Remote-Plugins (404, wenn es nicht installiert ist). */
+  getPluginInfo({ signal } = {}) {
+    return this.request('/JellyfinRemote/Info', { signal });
+  }
+
   /** Anmeldung mit Benutzername und Passwort. Liefert u. a. AccessToken und User. */
   authenticateByName(username, password) {
     return this.request('/Users/AuthenticateByName', {

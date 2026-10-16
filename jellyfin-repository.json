@@ -1,0 +1,12 @@
+[
+  {
+    "guid": "e7f6d1e2-2069-4a41-804f-19632a1e5966",
+    "name": "Jellyfin Remote",
+    "description": "Fernbedienung und Mediathek-Browser für Smartphones. Die App ist nach der Installation unter /remote/ erreichbar und wird im Web-Client verlinkt.",
+    "overview": "Smartphone-Fernbedienung für Jellyfin",
+    "owner": "DrdotHouse2106",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/app/icons/icon-512.png",
+    "versions": []
+  }
+]
