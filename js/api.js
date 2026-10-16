@@ -1,0 +1,184 @@
+/**
+ * Schlanker Client für die Jellyfin-REST-API.
+ * Kapselt Authentifizierung, Fehlerbehandlung und alle benötigten Endpunkte.
+ */
+
+const CLIENT_NAME = 'Jellyfin Remote';
+const CLIENT_VERSION = '1.0.0';
+
+/** Jellyfin rechnet Zeiten in "Ticks" (100 ns). */
+export const TICKS_PER_SECOND = 10_000_000;
+
+export class ApiError extends Error {
+  constructor(message, status = 0) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+/**
+ * Bereinigt eine eingegebene Server-URL:
+ * ergänzt fehlendes Protokoll und entfernt abschließende Schrägstriche.
+ */
+export function normalizeServerUrl(input) {
+  let url = String(input ?? '').trim();
+  if (!url) throw new ApiError('Bitte eine Server-URL eingeben.');
+  if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
+
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new ApiError('Die Server-URL ist ungültig.');
+  }
+  return (parsed.origin + parsed.pathname).replace(/\/+$/, '');
+}
+
+/** Ermittelt einen lesbaren Gerätenamen für das Jellyfin-Dashboard. */
+function detectDeviceName() {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/iPad|Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'iPad';
+  if (/Android/.test(ua)) return 'Android';
+  return 'Browser';
+}
+
+function statusMessage(status) {
+  switch (status) {
+    case 401: return 'Zugriff verweigert – das API-Token ist ungültig.';
+    case 403: return 'Keine Berechtigung für diese Aktion.';
+    case 404: return 'Nicht gefunden – ist das Gerät noch verbunden?';
+    default:  return `Serverfehler (HTTP ${status}).`;
+  }
+}
+
+function networkMessage(serverUrl) {
+  if (location.protocol === 'https:' && serverUrl.startsWith('http:')) {
+    return 'Die App läuft über HTTPS, der Server aber über HTTP. Browser blockieren solche Anfragen (Mixed Content).';
+  }
+  return 'Server nicht erreichbar. URL, Netzwerk und CORS-Einstellungen prüfen.';
+}
+
+export class JellyfinApi {
+  /**
+   * @param {{serverUrl: string, token: string, deviceId: string}} options
+   */
+  constructor({ serverUrl, token, deviceId }) {
+    this.serverUrl = serverUrl;
+    this.token = token;
+    this.authHeader =
+      `MediaBrowser Client="${CLIENT_NAME}", Device="${detectDeviceName()}", ` +
+      `DeviceId="${deviceId}", Version="${CLIENT_VERSION}", Token="${token}"`;
+  }
+
+  /** Zentrale Request-Funktion. Gibt JSON, Text oder null (204) zurück. */
+  async request(path, { method = 'GET', query, body, signal } = {}) {
+    const url = new URL(this.serverUrl + path);
+    for (const [key, value] of Object.entries(query ?? {})) {
+      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, value);
+    }
+
+    const headers = { Authorization: this.authHeader, Accept: 'application/json' };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+
+    let response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal,
+        cache: 'no-store',
+      });
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      throw new ApiError(networkMessage(this.serverUrl));
+    }
+
+    if (!response.ok) throw new ApiError(statusMessage(response.status), response.status);
+    if (response.status === 204) return null;
+
+    const type = response.headers.get('content-type') ?? '';
+    return type.includes('json') ? response.json() : response.text();
+  }
+
+  // ---------- System ----------
+
+  /** Serverinformationen – dient als Verbindungstest (benötigt gültiges Token). */
+  getSystemInfo() {
+    return this.request('/System/Info');
+  }
+
+  // ---------- Sitzungen ----------
+
+  /** Alle aktiven Sitzungen (nur die der letzten 15 Minuten). */
+  getSessions() {
+    return this.request('/Sessions', { query: { ActiveWithinSeconds: 900 } });
+  }
+
+  // ---------- Mediathek ----------
+
+  /** Live-Suche nach Filmen und Episoden. */
+  searchItems(term, { userId, signal, limit = 40 } = {}) {
+    return this.request('/Items', {
+      signal,
+      query: {
+        SearchTerm: term,
+        IncludeItemTypes: 'Movie,Episode',
+        Recursive: true,
+        Limit: limit,
+        Fields: 'PrimaryImageAspectRatio',
+        EnableImageTypes: 'Primary',
+        ImageTypeLimit: 1,
+        userId,
+      },
+    });
+  }
+
+  /**
+   * URL des Cover-Bildes. Bei Episoden wird bevorzugt das Serien-Poster genutzt,
+   * damit alle Ergebnisse im einheitlichen Hochformat erscheinen.
+   */
+  imageUrl(item, height = 360) {
+    let id = item.Id;
+    let tag = item.ImageTags?.Primary;
+
+    if (item.Type === 'Episode' && item.SeriesId && item.SeriesPrimaryImageTag) {
+      id = item.SeriesId;
+      tag = item.SeriesPrimaryImageTag;
+    }
+    if (!tag) return null;
+
+    const params = new URLSearchParams({ fillHeight: height, quality: 85, tag });
+    return `${this.serverUrl}/Items/${id}/Images/Primary?${params}`;
+  }
+
+  // ---------- Fernsteuerung ----------
+
+  /** Startet ein Element sofort auf dem Zielgerät (PlayCommand=PlayNow). */
+  play(sessionId, itemId) {
+    return this.request(`/Sessions/${sessionId}/Playing`, {
+      method: 'POST',
+      query: { playCommand: 'PlayNow', itemIds: itemId },
+    });
+  }
+
+  /** Wiedergabesteuerung: PlayPause, Pause, Unpause, Stop, Seek, … */
+  playstate(sessionId, command, query) {
+    return this.request(`/Sessions/${sessionId}/Playing/${command}`, { method: 'POST', query });
+  }
+
+  /** Allgemeiner Befehl ohne Argumente: MoveUp, MoveDown, Select, Back, GoHome, ToggleMute, … */
+  sendGeneralCommand(sessionId, command) {
+    return this.request(`/Sessions/${sessionId}/Command/${command}`, { method: 'POST' });
+  }
+
+  /** Setzt die Lautstärke (0–100) auf dem Zielgerät. */
+  setVolume(sessionId, volume) {
+    return this.request(`/Sessions/${sessionId}/Command`, {
+      method: 'POST',
+      body: { Name: 'SetVolume', Arguments: { Volume: String(Math.round(volume)) } },
+    });
+  }
+}
