@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/app/icons/icon-512.png",
     "versions": [
       {
+        "version": "1.2.0.0",
+        "changelog": "- Suche auf dem Fernseher: Der Suchbegriff wird live an das Zielgerät übertragen, die Ergebnisse erscheinen dort; auf dem Handy bleibt ein kleines Steuerkreuz zum Auswählen (abschaltbar über den Schalter in der Suche)\n- Schnellerer Start: App-Dateien bleiben dauerhaft im Speicher und werden gleichzeitig geladen\n- Spulen braucht nur noch eine Anfrage an den Server\n- Plugin-Skript im Web-Client läuft immer (auch bei ausgeschaltetem Kopfzeilen-Symbol), damit automatische Anmeldung und Suche überall funktionieren",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.2.0/jellyfin-remote_1.2.0.0.zip",
+        "checksum": "f5562ec7d33d3a3999f125b47757684e",
+        "timestamp": "2026-10-16T14:02:39Z"
+      },
+      {
         "version": "1.1.4.0",
         "changelog": "- Updates kommen sofort an: Die App wird unter einer Adresse mit Versionsnummer ausgeliefert, damit kein Zwischenspeicher (z. B. der Jellyfin-App auf dem iPhone) noch die alte Version zeigt\n- Zurück-Link zu Jellyfin funktioniert unabhängig davon, wie die Fernbedienung geöffnet wurde",
         "targetAbi": "12.2.0.0",
