@@ -20,7 +20,7 @@ It can be used in three ways:
 - **Remote** – D-pad, OK, Back, Home, on-screen display.
 - **Playback** – play/pause, skip ±10 s, stop, volume slider, mute.
 - **Now playing** – title, artwork and progress, refreshed every 2 seconds.
-- **Menu** – open sections (home, search, settings) and libraries directly on the TV. With the TV app [Heimkino TV](https://github.com/DrdotHouse2106/Jellyfin-TV-Client) (Android TV / Fire TV) also the live TV guide, recordings, the TV's apps (Netflix, YouTube, …) and its settings (Wi-Fi, Bluetooth, display, sound).
+- **Menu** – open sections (home, search, settings) and libraries directly on the TV. With the TV app [Quallenkino](https://github.com/DrdotHouse2106/Jellyfin-TV-Client) (Android TV / Fire TV) also the live TV guide, recordings, the TV's apps (Netflix, YouTube, …) and its settings (Wi-Fi, Bluetooth, display, sound).
 
 ## Jellyfin plugin (Jellyfin 12.2+)
 

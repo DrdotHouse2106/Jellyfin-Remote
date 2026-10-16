@@ -1,13 +1,13 @@
 /**
  * Menü: Bereiche und Bibliotheken direkt auf dem Fernseher öffnen – ohne sich mit dem
- * Steuerkreuz durchzuklicken. Mit der TV-App „Heimkino TV“ zusätzlich die Apps des
+ * Steuerkreuz durchzuklicken. Mit der TV-App „Quallenkino“ zusätzlich die Apps des
  * Fernsehers (Netflix, YouTube, …) und seine Einstellungen (WLAN, Bluetooth, Bild, Ton).
  */
 
 import { $, h, showError, toast } from '../ui.js';
 
-/** Client-Name der TV-App „Heimkino TV“ (Jellyfin-TV-Client). */
-const HEIMKINO_CLIENT = /^heimkino tv/i;
+/** Client-Name der TV-App „Quallenkino“ (Jellyfin-TV-Client). */
+const HEIMKINO_CLIENT = /^(quallenkino|heimkino tv)/i;
 /** Präfix für Zusatzbefehle an Heimkino TV (per SendString). */
 const TV_PREFIX = 'tvclient:';
 
@@ -125,7 +125,7 @@ export function initMenuView(app) {
     }));
 
     tvHint.hidden = appList.length > 0;
-    tvHint.textContent = 'Die Liste der Apps erscheint, sobald „Heimkino TV“ einmal die Startseite angezeigt hat.';
+    tvHint.textContent = 'Die Liste der Apps erscheint, sobald „Quallenkino“ einmal die Startseite angezeigt hat.';
   }
 
   async function load() {
@@ -147,7 +147,7 @@ export function initMenuView(app) {
       fill(device, []);
       tvHint.hidden = false;
       tvHint.textContent =
-        'Apps (Netflix, YouTube, …) und Einstellungen des Fernsehers lassen sich mit der TV-App „Heimkino TV“ öffnen.';
+        'Apps (Netflix, YouTube, …) und Einstellungen des Fernsehers lassen sich mit der TV-App „Quallenkino“ öffnen.';
     }
 
     renderLibraries(session).catch(showError);

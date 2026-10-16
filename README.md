@@ -18,7 +18,7 @@ Die App lässt sich auf drei Arten nutzen:
 - **Fernbedienung** – Steuerkreuz (Hoch, Runter, Links, Rechts, OK) sowie Zurück, Home und Bildschirmmenü.
 - **Wiedergabe** – Play/Pause, 10 Sekunden vor/zurück, Stopp, Lautstärkeregler und Stummschaltung.
 - **Läuft gerade** – Titel, Cover und Fortschritt des aktuellen Mediums, alle 2 Sekunden aktualisiert.
-- **Menü** – Bereiche (Startseite, Suche, Einstellungen) und Bibliotheken (Filme, Serien, Live-TV …) direkt auf dem Fernseher öffnen. Mit der TV-App **[Heimkino TV](https://github.com/DrdotHouse2106/Jellyfin-TV-Client)** (Android TV / Fire TV) zusätzlich TV-Programm, Aufnahmen und Zeitplan sowie die **Apps des Fernsehers** (Netflix, YouTube, Mediatheken …) und seine **Einstellungen** (WLAN, Bluetooth, Bild, Ton) – ohne Umweg über das Menü des Sticks.
+- **Menü** – Bereiche (Startseite, Suche, Einstellungen) und Bibliotheken (Filme, Serien, Live-TV …) direkt auf dem Fernseher öffnen. Mit der TV-App **[Quallenkino](https://github.com/DrdotHouse2106/Jellyfin-TV-Client)** (Android TV / Fire TV) zusätzlich TV-Programm, Aufnahmen und Zeitplan sowie die **Apps des Fernsehers** (Netflix, YouTube, Mediatheken …) und seine **Einstellungen** (WLAN, Bluetooth, Bild, Ton) – ohne Umweg über das Menü des Sticks.
 - **PWA** – installierbar, App-Struktur wird per Service Worker offline zwischengespeichert.
 
 ## Projektstruktur

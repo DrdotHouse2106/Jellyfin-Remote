@@ -3,6 +3,10 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.1
+
+- Die TV-App heißt jetzt „Quallenkino“: Apps, Einstellungen und TV-Bereiche im Menü funktionieren mit dem neuen Namen
+
 ## 1.3.0
 
 - Neuer Reiter **Menü**: Startseite, Suche, Einstellungen und alle Bibliotheken (Filme, Serien, Live-TV …) mit einem Tipp auf dem Fernseher öffnen
