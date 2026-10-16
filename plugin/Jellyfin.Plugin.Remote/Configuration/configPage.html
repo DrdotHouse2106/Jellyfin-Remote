@@ -91,6 +91,7 @@
                         <button is="emby-button" type="button" class="raised emby-button" id="jfrDiagCopy"><span>Kopieren</span></button>
                         <button is="emby-button" type="button" class="raised emby-button" id="jfrDiagClear"><span>Leeren</span></button>
                     </div>
+                    <div class="fieldDescription" id="jfrDiagStatus" style="margin-bottom: .5em;"></div>
                     <textarea id="jfrDiagLog" readonly spellcheck="false"
                               style="width: 100%; height: 24em; box-sizing: border-box; font: 12px/1.4 monospace; background: rgba(0,0,0,.3); color: inherit; border: 1px solid rgba(255,255,255,.15); border-radius: 6px; padding: .6em;"></textarea>
                 </div>
@@ -146,15 +147,45 @@
                     target.title = text;
                 }
 
+                var diagTimer = null;
+
                 function loadDiagnostics() {
                     var box = page.querySelector('#jfrDiagLog');
+                    var status = page.querySelector('#jfrDiagStatus');
                     return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('JellyfinRemote/Diagnostics'), dataType: 'text' })
                         .then(function (text) {
-                            box.value = text || '(noch keine Einträge)';
-                            box.scrollTop = box.scrollHeight;
+                            var lines = (text || '').split('\n').filter(function (l) { return l.trim(); });
+                            var sources = {};
+                            lines.forEach(function (l) {
+                                var m = l.match(/\[([^\]]+)\]/);
+                                if (m) sources[m[1]] = (sources[m[1]] || 0) + 1;
+                            });
+                            var summary = Object.keys(sources).map(function (k) { return k + ': ' + sources[k]; }).join(' · ');
+                            status.textContent = 'Aktualisiert ' + new Date().toLocaleTimeString() + ' · ' + lines.length + ' Einträge' +
+                                (summary ? ' (' + summary + ')' : ' – noch nichts angekommen. Fernbedienung und gesteuertes Jellyfin-Fenster nach dem Einschalten neu laden.');
+                            var atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 20;
+                            box.value = text || '';
+                            if (atBottom) box.scrollTop = box.scrollHeight;
                         })
-                        .catch(function () { box.value = 'Protokoll konnte nicht geladen werden.'; });
+                        .catch(function () { status.textContent = 'Protokoll konnte nicht geladen werden.'; });
                 }
+
+                /** Solange die Seite offen und das Protokoll an ist: alle 3 Sekunden aktualisieren. */
+                function startDiagnosticsRefresh(enabled) {
+                    clearInterval(diagTimer);
+                    diagTimer = null;
+                    if (!enabled) return;
+                    loadDiagnostics();
+                    diagTimer = setInterval(function () {
+                        if (!document.body.contains(page) || page.classList.contains('hide')) {
+                            clearInterval(diagTimer);
+                            return;
+                        }
+                        loadDiagnostics();
+                    }, 3000);
+                }
+
+                page.addEventListener('pagehide', function () { clearInterval(diagTimer); });
 
                 page.querySelector('#jfrDiagRefresh').addEventListener('click', loadDiagnostics);
                 page.querySelector('#jfrDiagCopy').addEventListener('click', function () {
@@ -170,7 +201,7 @@
 
                 function render(config) {
                     page.querySelector('#jfrDiagnosticsSection').hidden = !config.EnableDiagnostics;
-                    if (config.EnableDiagnostics) loadDiagnostics();
+                    startDiagnosticsRefresh(config.EnableDiagnostics);
 
                     var base = serverUrl(config);
                     var appUrl = base + '/remote/';

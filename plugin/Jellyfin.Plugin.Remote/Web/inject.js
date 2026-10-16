@@ -71,6 +71,11 @@
         return el.tagName.toLowerCase() + (classes ? '.' + classes : '') + (text ? ' „' + text + '“' : '') + (isShown(el) ? '' : ' [unsichtbar]');
     }
 
+    try {
+        console.info('[Jellyfin Remote] Plugin-Skript aktiv · Diagnose ' + (DIAGNOSTICS ? 'an' : 'aus') +
+            ' · Layout ' + (document.documentElement.className || '(noch nicht gesetzt)'));
+    } catch (e) { /* ignorieren */ }
+
     if (DIAGNOSTICS) {
         setInterval(flushDiagnostics, 3000);
         window.addEventListener('pagehide', flushDiagnostics);
@@ -154,10 +159,11 @@
                 if (r.bottom > fr.top + 1) continue;
                 primary = fr.top - r.bottom; secondary = Math.abs(ex - cx);
             } else if (direction === 'right') {
-                if (r.left < fr.right - 1) continue;
+                // Links/Rechts nur innerhalb derselben Reihe (vertikale Überlappung)
+                if (r.left < fr.right - 1 || r.top >= fr.bottom || r.bottom <= fr.top) continue;
                 primary = r.left - fr.right; secondary = Math.abs(ey - cy);
             } else {
-                if (r.right > fr.left + 1) continue;
+                if (r.right > fr.left + 1 || r.top >= fr.bottom || r.bottom <= fr.top) continue;
                 primary = fr.left - r.right; secondary = Math.abs(ey - cy);
             }
 
@@ -201,14 +207,18 @@
      * Pfeiltasten selbst übernehmen? Nur im normalen Layout (Desktop/Handy) – dort ist die Navigation
      * des Web-Clients unzuverlässig. Im TV-Layout, während der Wiedergabe und in Dialogen bleibt sie beim Web-Client.
      */
-    function shouldTakeOverNavigation() {
-        if (document.documentElement.classList.contains('layout-tv')) return false;
-        if (/^#\/(video|music|nowplaying|queue)/.test(location.hash)) return false;
+    function navigationBlocker() {
+        if (document.documentElement.classList.contains('layout-tv')) return 'TV-Layout';
+        if (/^#\/(video|music|nowplaying|queue)/.test(location.hash)) return 'Wiedergabe';
         var dialogs = document.querySelectorAll('.dialogContainer .dialog.opened, .MuiDialog-root, .MuiPopover-root, [role="dialog"]');
         for (var i = 0; i < dialogs.length; i++) {
-            if (isShown(dialogs[i])) return false;
+            if (isShown(dialogs[i])) return 'Dialog/Menü offen: ' + describe(dialogs[i]);
         }
-        return true;
+        return '';
+    }
+
+    function shouldTakeOverNavigation() {
+        return navigationBlocker() === '';
     }
 
     /** Bei Kacheln das Haupt-Element (in der Regel der Bild-Link) statt eines Zusatzknopfs. */
@@ -224,6 +234,22 @@
         return el;
     }
 
+    /**
+     * Absicherung: Versucht der Web-Client unmittelbar nach unserem Schritt den Fokus zusätzlich zu
+     * verschieben (doppelte Verarbeitung → „zwei Schritte“), wird das zurückgenommen.
+     */
+    var focusGuard = null;
+
+    document.addEventListener('focusin', function (event) {
+        if (!focusGuard || Date.now() > focusGuard.until) return;
+        var target = focusGuard.target;
+        var el = event.target;
+        if (el === target || (target.closest('.card') && el.closest && el.closest('.card') === target.closest('.card'))) return;
+        diag('  ! Web-Client wollte den Fokus zusätzlich verschieben (' + describe(el) + ') – zurückgenommen');
+        focusGuard = null;
+        setTimeout(function () { focusElement(target); }, 0);
+    }, true);
+
     /** Eigene Navigation: eine Kachel = ein Schritt, Überschriften und Zusatzknöpfe werden übersprungen. */
     function navigate(direction) {
         markRemoteNavigation();
@@ -233,6 +259,7 @@
         diag('Pfeil ' + direction + ' (Plugin) · Seite ' + (location.hash || '/') + ' · von: ' + describe(start) + (start ? '' : ' → Start im Seiteninhalt'));
         if (target) {
             focusElement(target);
+            focusGuard = { target: target, until: Date.now() + 400 };
             diag('  → ' + describe(target));
         } else {
             diag('  → kein Element in dieser Richtung');
@@ -254,7 +281,11 @@
                 'html.jfr-remote-nav :focus:not(.card *) { outline: 3px solid #00a4dc !important; outline-offset: 2px !important; border-radius: 6px; }' +
                 // Kacheln: Rahmen um das ganze Bild statt um den Titeltext
                 'html.jfr-remote-nav .card :focus { outline: none !important; }' +
-                'html.jfr-remote-nav .card:focus-within .cardScalable { outline: 4px solid #00a4dc; outline-offset: 3px; border-radius: 8px; }';
+                // Kacheln: Rahmen als Ebene innerhalb des Bildes – wird von Reihen mit overflow:hidden nicht abgeschnitten
+                'html.jfr-remote-nav .card:focus-within .cardScalable { position: relative; }' +
+                'html.jfr-remote-nav .card:focus-within .cardScalable::after { content: ""; position: absolute; inset: 0; ' +
+                'border: 4px solid #00a4dc; border-radius: 8px; box-shadow: inset 0 0 0 2px rgba(0,0,0,.35); ' +
+                'pointer-events: none; z-index: 5; }';
             document.head.appendChild(style);
         }
         document.documentElement.classList.add('jfr-remote-nav');
@@ -276,7 +307,9 @@
     function handleNavCommand(name) {
         markRemoteNavigation();
         var before = document.activeElement;
-        diag('Befehl ' + name + ' · Seite ' + (location.hash || '/') + ' · Fokus vorher: ' + describe(before));
+        var blocker = ARROWS[name] ? navigationBlocker() : '';
+        diag('Befehl ' + name + ' (Web-Client' + (blocker ? ', weil: ' + blocker : '') + ') · Seite ' + (location.hash || '/') +
+            ' · Fokus vorher: ' + describe(before));
 
         if (before && before !== document.body && !isShown(before)) {
             before.blur();
@@ -341,14 +374,35 @@
         }
     }
 
+    /**
+     * Der Web-Client hält zeitweise mehrere Live-Verbindungen offen, der Server schickt jeden Befehl
+     * über jede davon. Doppelte Nachrichten (gleiche MessageId) werden verworfen – sonst würde jeder
+     * Tastendruck zweimal ausgeführt („zwei Schritte“).
+     */
+    var seenMessageIds = [];
+
+    function isDuplicate(message) {
+        if (!message.MessageId) return false;
+        if (seenMessageIds.indexOf(message.MessageId) !== -1) return true;
+        seenMessageIds.push(message.MessageId);
+        if (seenMessageIds.length > 50) seenMessageIds.shift();
+        return false;
+    }
+
     function onServerMessage(event) {
         var message;
         try {
             message = JSON.parse(event.data);
         } catch (e) {
-            return;
+            return false;
         }
-        if (!message || !message.MessageType) return;
+        if (!message || !message.MessageType) return false;
+        if (isDuplicate(message)) {
+            if (message.MessageType !== 'KeepAlive' && message.MessageType !== 'ForceKeepAlive') {
+                diag('  (doppelt empfangen über zweite Verbindung – ignoriert: ' + message.MessageType + ')');
+            }
+            return true;
+        }
         if (message.MessageType === 'GeneralCommand' && message.Data && NAV_COMMANDS[message.Data.Name]) {
             var name = message.Data.Name;
             if (ARROWS[name] && shouldTakeOverNavigation()) {
@@ -363,33 +417,69 @@
         }
         if (message.MessageType === 'GeneralCommand' && message.Data && message.Data.Name === 'SendString') {
             var text = (message.Data.Arguments && message.Data.Arguments.String) || '';
+            if (text.indexOf('tvclient:') === 0) return false; // Zusatzbefehl für die TV-App „Heimkino TV“
             // Nach dem eigenen Handler des Web-Clients ausführen.
             setTimeout(function () { applySearchText(text); }, 50);
         }
     }
 
+    var openSockets = 0;
+
     if (NativeWebSocket) {
         var PatchedWebSocket = function (url, protocols) {
             var socket = protocols === undefined ? new NativeWebSocket(url) : new NativeWebSocket(url, protocols);
             if (!/\/socket(\?|$)/.test(String(url))) return socket;
+            openSockets++;
+            diag('Live-Verbindung geöffnet (offen: ' + openSockets + ')');
+            socket.addEventListener('close', function () {
+                openSockets--;
+                diag('Live-Verbindung geschlossen (offen: ' + openSockets + ')');
+            });
             try {
-                // Der Web-Client setzt socket.onmessage. Wir schalten uns davor: Nachrichten, die wir
-                // selbst erledigen (Pfeiltasten im normalen Layout), bekommt er nicht mehr.
+                // Der Web-Client empfängt Nachrichten auf zwei Wegen: über socket.onmessage (ältere
+                // Bibliothek) und über socket.addEventListener('message') (Jellyfin-SDK ab 12.x).
+                // Wir schalten uns vor beide: Nachrichten, die wir selbst erledigen (Pfeiltasten im
+                // normalen Layout, doppelte Nachrichten), bekommt der Web-Client nicht mehr.
+                var handledEvents = new WeakSet();
+                var nativeAdd = socket.addEventListener.bind(socket);
+                var nativeRemove = socket.removeEventListener.bind(socket);
+                var wrappers = new Map();
                 var clientHandler = null;
+
+                // Unser eigener Empfänger – als Erstes registriert, läuft also vor allen anderen.
+                nativeAdd('message', function (event) {
+                    try {
+                        if (onServerMessage(event) === true) handledEvents.add(event);
+                    } catch (e) {
+                        diag('Fehler im Plugin-Skript: ' + e.message);
+                    }
+                    if (clientHandler && !handledEvents.has(event)) clientHandler.call(socket, event);
+                });
+
                 Object.defineProperty(socket, 'onmessage', {
                     configurable: true,
                     get: function () { return clientHandler; },
                     set: function (fn) { clientHandler = fn; }
                 });
-                socket.addEventListener('message', function (event) {
-                    var handled = false;
-                    try {
-                        handled = onServerMessage(event) === true;
-                    } catch (e) {
-                        diag('Fehler im Plugin-Skript: ' + e.message);
+
+                socket.addEventListener = function (type, listener, options) {
+                    if (type !== 'message' || !listener) return nativeAdd(type, listener, options);
+                    var wrapper = function (event) {
+                        if (handledEvents.has(event)) return undefined;
+                        return typeof listener === 'function' ? listener.call(this, event) : listener.handleEvent(event);
+                    };
+                    wrappers.set(listener, wrapper);
+                    return nativeAdd(type, wrapper, options);
+                };
+
+                socket.removeEventListener = function (type, listener, options) {
+                    if (type === 'message' && wrappers.has(listener)) {
+                        nativeRemove(type, wrappers.get(listener), options);
+                        wrappers.delete(listener);
+                        return undefined;
                     }
-                    if (!handled && clientHandler) clientHandler.call(socket, event);
-                });
+                    return nativeRemove(type, listener, options);
+                };
             } catch (e) { /* ignorieren – dann arbeitet der Web-Client wie gewohnt */ }
             return socket;
         };

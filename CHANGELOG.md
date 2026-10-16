@@ -3,6 +3,14 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.2
+
+- Steuerkreuz im Browser: Ein Druck ist jetzt wirklich ein Schritt – der Web-Client von Jellyfin 12 führte die Pfeil-Befehle zusätzlich selbst aus (über das neue Jellyfin-SDK), dadurch gab es doppelte Schritte und Aussetzer, die erst nach dem Neuladen weg waren
+- Links/Rechts bleiben in der eigenen Reihe
+- Auswahlrahmen um Kacheln wird nicht mehr seitlich abgeschnitten
+- Doppelt empfangene Server-Nachrichten werden verworfen
+- Diagnoseprotokoll aktualisiert sich in den Plugin-Einstellungen automatisch und zeigt die Anzahl der Einträge je Gerät; mehr Details (Live-Verbindungen, Grund, wenn der Web-Client die Navigation übernimmt)
+
 ## 1.3.1
 
 - Die TV-App heißt jetzt „Quallenkino“: Apps, Einstellungen und TV-Bereiche im Menü funktionieren mit dem neuen Namen
