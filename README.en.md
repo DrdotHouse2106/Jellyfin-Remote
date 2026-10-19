@@ -1,5 +1,7 @@
 # Jellyfin Remote
 
+[![Buy me a coffee](https://img.shields.io/badge/☕_Buy_me_a_coffee-PayPal-0070ba?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/DrdotHouse)
+
 *[Deutsche Version](README.md)*
 
 A minimalist Progressive Web App (PWA) that turns your phone into a remote control and library browser for your [Jellyfin](https://jellyfin.org) server. Written in plain HTML5, CSS3 and ES6 JavaScript – no frameworks, no build step.
