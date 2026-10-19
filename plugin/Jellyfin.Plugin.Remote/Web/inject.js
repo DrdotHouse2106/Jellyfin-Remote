@@ -13,7 +13,18 @@
 
     var BUTTON_ID = 'jellyfinRemoteHeaderButton';
     var SCRIPT_SRC = (document.currentScript && document.currentScript.src) || '';
-    var SHOW_HEADER_BUTTON = !/[?&]header=0\b/.test(SCRIPT_SRC);
+    // header=0: kein Kopfzeilen-Symbol · 1: überall · 2: nur auf Handys und Tablets
+    var HEADER_MODE = (SCRIPT_SRC.match(/[?&]header=(\d)/) || [null, '1'])[1];
+
+    /** Touch-Gerät (Handy/Tablet, auch Jellyfin-Apps für iOS/Android)? */
+    function isTouchDevice() {
+        var ua = navigator.userAgent;
+        if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+        if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return true; // iPad mit Desktop-Kennung
+        return Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    }
+
+    var SHOW_HEADER_BUTTON = HEADER_MODE === '1' || (HEADER_MODE === '2' && isTouchDevice());
     var DIAGNOSTICS = /[?&]diag=1\b/.test(SCRIPT_SRC);
     var APP_URL = new URL('../remote/', document.baseURI).href;
     var SERVER_URL = new URL('../', document.baseURI).href.replace(/\/+$/, '');

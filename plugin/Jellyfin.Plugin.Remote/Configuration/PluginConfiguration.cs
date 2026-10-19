@@ -13,6 +13,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets a value indicating whether in der Kopfzeile des Web-Clients ein Symbol angezeigt wird.</summary>
     public bool ShowHeaderButton { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether das Kopfzeilen-Symbol nur auf Handys und Tablets
+    /// (Touch-Geräte, auch in den Jellyfin-Apps) erscheint. Auf Desktop-Browsern entsteht es dann gar nicht.
+    /// </summary>
+    public bool HeaderButtonTouchOnly { get; set; } = true;
+
     /// <summary>Gets or sets die Beschriftung des Links im Seitenmenü.</summary>
     public string MenuLinkName { get; set; } = "Fernbedienung";
 

@@ -46,6 +46,17 @@
                             </div>
                         </div>
 
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="jfrHeaderButtonTouchOnly" type="checkbox" is="emby-checkbox">
+                                <span>Symbol nur auf Handys und Tablets</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Im Browser am Computer erscheint das Symbol dann nicht (auch nicht im Profilmenü).
+                                In den Jellyfin-Apps für iPhone, iPad und Android bleibt es sichtbar.
+                            </div>
+                        </div>
+
                         <div class="fieldDescription">
                             Änderungen werden nach dem Neuladen des Web-Clients sichtbar (am Computer Strg + F5, in Apps neu starten).
                         </div>
@@ -223,6 +234,7 @@
                     ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                         page.querySelector('#jfrShowMenuLink').checked = config.ShowMenuLink;
                         page.querySelector('#jfrShowHeaderButton').checked = config.ShowHeaderButton;
+                        page.querySelector('#jfrHeaderButtonTouchOnly').checked = config.HeaderButtonTouchOnly;
                         page.querySelector('#jfrMenuLinkName').value = config.MenuLinkName || '';
                         page.querySelector('#jfrPublicUrl').value = config.PublicUrl || '';
                         page.querySelector('#jfrEnableDiagnostics').checked = config.EnableDiagnostics;
@@ -237,6 +249,7 @@
                     ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                         config.ShowMenuLink = page.querySelector('#jfrShowMenuLink').checked;
                         config.ShowHeaderButton = page.querySelector('#jfrShowHeaderButton').checked;
+                        config.HeaderButtonTouchOnly = page.querySelector('#jfrHeaderButtonTouchOnly').checked;
                         config.MenuLinkName = page.querySelector('#jfrMenuLinkName').value.trim();
                         config.PublicUrl = page.querySelector('#jfrPublicUrl').value.trim();
                         config.EnableDiagnostics = page.querySelector('#jfrEnableDiagnostics').checked;

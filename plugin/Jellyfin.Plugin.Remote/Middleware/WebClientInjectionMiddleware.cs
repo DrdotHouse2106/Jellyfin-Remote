@@ -66,7 +66,9 @@ public sealed class WebClientInjectionMiddleware
             else if (path.Equals(webRoot, StringComparison.OrdinalIgnoreCase)
                 || path.Equals(webRoot + "index.html", StringComparison.OrdinalIgnoreCase))
             {
-                if (await TryServeIndex(context, config.ShowHeaderButton).ConfigureAwait(false))
+                // header: 0 = aus, 1 = überall, 2 = nur Handys und Tablets
+                var headerMode = !config.ShowHeaderButton ? 0 : config.HeaderButtonTouchOnly ? 2 : 1;
+                if (await TryServeIndex(context, headerMode).ConfigureAwait(false))
                 {
                     return;
                 }
@@ -120,7 +122,7 @@ public sealed class WebClientInjectionMiddleware
         }
     }
 
-    private async Task<bool> TryServeIndex(HttpContext context, bool showHeaderButton)
+    private async Task<bool> TryServeIndex(HttpContext context, int headerMode)
     {
         try
         {
@@ -140,7 +142,7 @@ public sealed class WebClientInjectionMiddleware
             // Das Skript läuft immer (automatische Anmeldung, Suche auf dem Fernseher);
             // das Kopfzeilen-Symbol wird per Parameter ein- oder ausgeschaltet.
             var diagnostics = Plugin.Instance?.Configuration.EnableDiagnostics == true;
-            var scriptTag = $"<script src=\"{ScriptPath}?header={(showHeaderButton ? 1 : 0)}&diag={(diagnostics ? 1 : 0)}\"></script>";
+            var scriptTag = $"<script src=\"{ScriptPath}?header={headerMode}&diag={(diagnostics ? 1 : 0)}\"></script>";
             var injected = html.Insert(index + "<head>".Length, scriptTag);
             await WriteAsync(context, injected, "text/html; charset=utf-8").ConfigureAwait(false);
             return true;
