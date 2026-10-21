@@ -101,7 +101,8 @@ public class RemoteController : ControllerBase
 
     /// <summary>
     /// Informationen über das Plugin. Die App (Web und iPhone) erkennt daran,
-    /// ob das Plugin installiert ist und unter welcher Adresse der Server öffentlich erreichbar ist.
+    /// ob das Plugin installiert ist. Die Antwort ist ohne Anmeldung abrufbar und enthält
+    /// darum bewusst keine Konfiguration wie die öffentliche Server-Adresse.
     /// </summary>
     /// <returns>Plugin-Informationen.</returns>
     [HttpGet("JellyfinRemote/Info")]
@@ -114,7 +115,6 @@ public class RemoteController : ControllerBase
             Version = AppVersion,
             ServerName = _applicationHost.FriendlyName,
             AppPath = "remote/",
-            PublicUrl = string.IsNullOrWhiteSpace(config?.PublicUrl) ? null : config.PublicUrl.TrimEnd('/'),
             Diagnostics = config?.EnableDiagnostics ?? false,
         };
     }

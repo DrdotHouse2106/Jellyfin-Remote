@@ -61,6 +61,8 @@ With account sign-in only the access token issued by Jellyfin is stored, never t
 
 When the user or server changes (including the automatic sign-in from within Jellyfin), the old token is signed out on the server first, so no valid tokens are left behind. Links with `?server=…` are only accepted by the web app if they point to its own server; the iPhone app asks for confirmation before using `jellyfinremote://connect?server=…`. A server address entered without a scheme defaults to HTTPS.
 
+The files served by the plugin (`/remote/…`, `/JellyfinRemote/…`) are public but contain only the app itself; `GET /JellyfinRemote/Info` does not reveal any settings such as the public server URL. The release workflow builds exactly the pushed tag, validates the version input (no shell injection) and pins all GitHub Actions to commit SHAs.
+
 ## Support the project
 
 Development costs time and money (servers, test devices, AI tools). If you like the project, a small donation is very welcome:

@@ -3,6 +3,12 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.5
+
+- Schnellerer Start: Versionierte App-Dateien kommen direkt aus dem Offline-Speicher, ohne jedes Mal beim Server nachzufragen; nur index.html, service-worker.js und manifest.json werden online immer neu geprüft
+- Sicherheit: Die ohne Anmeldung abrufbare Plugin-Info (`/JellyfinRemote/Info`) enthält die öffentliche Server-Adresse nicht mehr
+- Sicherheit: Release-Workflow baut genau den gepushten Tag, prüft die Versionsangabe (kein eingeschleuster Shell-Code) und nutzt GitHub Actions in fest angegebenen Versionen
+
 ## 1.3.4
 
 - Sicherheit: Bei der automatischen Anmeldung aus Jellyfin heraus wird ein altes Token (anderer Benutzer oder Server) jetzt zuerst am Server abgemeldet – es bleiben keine gültigen Tokens zurück, die Geräteliste wächst nicht

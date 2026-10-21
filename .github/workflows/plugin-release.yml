@@ -25,20 +25,27 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Bei einem Tag-Push genau diesen Tag bauen, beim manuellen Start main.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: main
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: '10.0.x'
 
       - name: Version ermitteln
         id: version
+        # Eingabe über env statt direkt im Skript – sonst ließe sich über die Versionsangabe Shell-Code einschleusen.
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version || github.ref_name }}
         run: |
-          VERSION="${{ github.event.inputs.version || github.ref_name }}"
-          VERSION="${VERSION#v}"
+          VERSION="${INPUT_VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Ungültige Version '$VERSION' (erwartet z. B. 1.0.1)"
+            exit 1
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           echo "zip=jellyfin-remote_$VERSION.0.zip" >> "$GITHUB_OUTPUT"
@@ -93,10 +100,10 @@ jobs:
           echo "timestamp=$TIMESTAMP" >> "$GITHUB_OUTPUT"
 
       - name: GitHub-Release erstellen
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          target_commitish: main
+          target_commitish: ${{ github.sha }}
           name: Jellyfin Remote ${{ steps.version.outputs.version }}
           files: ${{ steps.version.outputs.zip }}
           body_path: changelog.txt
@@ -130,4 +137,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add jellyfin-repository.json app/js/version.js app/service-worker.js plugin/Jellyfin.Plugin.Remote/Jellyfin.Plugin.Remote.csproj
           git commit -m "Release ${{ steps.version.outputs.version }}"
-          git push origin main
+          git push origin HEAD:main

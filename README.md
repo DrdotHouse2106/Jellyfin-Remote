@@ -215,7 +215,8 @@ Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server ein
 - Links mit `?server=…` übernimmt die Web-App nur, wenn sie auf den eigenen Server zeigen; die iPhone-App fragt bei `jellyfinremote://connect?server=…` vorher nach. So kann niemand per präpariertem Link eine fremde Server-Adresse unterschieben.
 - Wird eine Server-Adresse ohne `http://` bzw. `https://` eingegeben, nimmt die App **HTTPS** an.
 - Für den Zugriff von außen ist **HTTPS Pflicht**, sonst würden Passwort und Token unverschlüsselt übertragen.
-- Die vom Plugin ausgelieferten Dateien (`/remote/…`, `/JellyfinRemote/…`) sind ohne Anmeldung abrufbar – sie enthalten nur die App selbst, keine Daten deines Servers. Alles Weitere erfordert die normale Jellyfin-Anmeldung.
+- Die vom Plugin ausgelieferten Dateien (`/remote/…`, `/JellyfinRemote/…`) sind ohne Anmeldung abrufbar – sie enthalten nur die App selbst, keine Daten deines Servers. Auch `GET /JellyfinRemote/Info` verrät keine Einstellungen (etwa die öffentliche Server-Adresse). Alles Weitere erfordert die normale Jellyfin-Anmeldung.
+- Der Release-Workflow baut genau den gepushten Tag, übernimmt die Versionsangabe nur geprüft (Schutz vor eingeschleustem Shell-Code) und nutzt GitHub Actions in fest angegebenen Versionen (Commit-SHA).
 
 ## Voraussetzungen
 
