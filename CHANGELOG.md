@@ -3,6 +3,13 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.4
+
+- Sicherheit: Bei der automatischen Anmeldung aus Jellyfin heraus wird ein altes Token (anderer Benutzer oder Server) jetzt zuerst am Server abgemeldet – es bleiben keine gültigen Tokens zurück, die Geräteliste wächst nicht
+- Sicherheit: Links mit `?server=…` übernimmt die Web-App nur, wenn sie auf den eigenen Server zeigen; die iPhone-App fragt vorher nach (Schutz vor untergeschobenen Server-Adressen)
+- Sicherheit: Server-Adressen ohne Schema werden als HTTPS statt HTTP angenommen
+- Weniger Last: Die laufende Aktualisierung fragt nur noch das Zielgerät ab statt alle 2 Sekunden die komplette Sitzungsliste
+
 ## 1.3.3
 
 - Kopfleisten-Knopf „Fernbedienung“ standardmäßig nur noch auf Handys und Tablets (Touch-Geräte, auch in den Jellyfin-Apps für iOS und Android); im Browser am Computer entsteht er nicht mehr – und landet damit auch nicht im Profilmenü

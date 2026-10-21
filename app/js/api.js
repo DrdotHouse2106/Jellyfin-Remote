@@ -27,7 +27,8 @@ export class ApiError extends Error {
 export function normalizeServerUrl(input) {
   let url = String(input ?? '').trim();
   if (!url) throw new ApiError('Bitte eine Server-URL eingeben.');
-  if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
+  // Ohne Angabe HTTPS annehmen – Zugangsdaten sollen nie versehentlich unverschlüsselt übertragen werden.
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
 
   let parsed;
   try {
@@ -212,8 +213,8 @@ export class JellyfinApi {
   // ---------- Sitzungen ----------
 
   /** Alle aktiven Sitzungen (nur die der letzten 15 Minuten). */
-  getSessions() {
-    return this.request('/Sessions', { query: { ActiveWithinSeconds: 900 } });
+  getSessions({ deviceId } = {}) {
+    return this.request('/Sessions', { query: { ActiveWithinSeconds: 900, DeviceId: deviceId } });
   }
 
   // ---------- Mediathek ----------

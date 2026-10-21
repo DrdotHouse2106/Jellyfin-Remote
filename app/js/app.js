@@ -80,7 +80,9 @@ const app = {
    * Neuverbindung eine neue Sitzungs-ID – daher wird über die Geräte-ID gesucht.
    */
   async resolveSession() {
-    const sessions = await this.api.getSessions();
+    // Gezielt nur das Zielgerät abfragen statt alle 2 s die komplette Sitzungsliste.
+    const deviceId = this.config.targetDeviceId;
+    const sessions = await this.api.getSessions(deviceId ? { deviceId } : {});
     const found =
       sessions.find((s) => s.DeviceId && s.DeviceId === this.config.targetDeviceId) ??
       sessions.find((s) => s.Id === this.session?.Id) ??
@@ -185,8 +187,24 @@ function applyServerLink(link) {
 
   // Bereits mit genau diesem Server verbunden → nichts zu tun.
   if (server === app.config.serverUrl && app.config.token) return false;
+
+  // Schutz vor untergeschobenen Links (Phishing): Im Browser nur den eigenen Server akzeptieren,
+  // in der nativen App vorher nachfragen.
+  if (isNativeApp) {
+    if (!confirm(`Mit dem Server „${server}“ verbinden?\n\nNur bestätigen, wenn das dein Jellyfin-Server ist.`)) return false;
+  } else if (server !== ownServerUrl()) {
+    toast('Link ignoriert: Er verweist auf einen fremden Server.', 'error');
+    return false;
+  }
+
   app.pendingServerUrl = server;
   return true;
+}
+
+/** Adresse des Jellyfin-Servers, der diese App ausliefert (…/remote/ → Basis-URL davor). */
+function ownServerUrl() {
+  const basePath = location.pathname.includes('/remote/') ? location.pathname.replace(/\/remote\/.*$/, '') : '';
+  return (location.origin + basePath).replace(/\/+$/, '');
 }
 
 function openSetupForPendingServer() {

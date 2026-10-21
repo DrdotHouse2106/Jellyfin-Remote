@@ -134,7 +134,7 @@ Dann in Xcode erneut **▶ Run**.
 
 ### Hinweise zur nativen App
 
-- **Kopplung mit dem Plugin:** In den Plugin-Einstellungen den QR-Code „In der iPhone-App verbinden“ mit der Kamera scannen – die App öffnet sich und die Server-URL ist eingetragen (URL-Schema `jellyfinremote://connect?server=…`). Ohne Plugin gibst du die Server-URL einmalig von Hand ein.
+- **Kopplung mit dem Plugin:** In den Plugin-Einstellungen den QR-Code „In der iPhone-App verbinden“ mit der Kamera scannen – die App öffnet sich und die Server-URL ist eingetragen (URL-Schema `jellyfinremote://connect?server=…`; die App fragt vor dem Übernehmen nach). Ohne Plugin gibst du die Server-URL einmalig von Hand ein.
 - Die iPhone-App braucht **keinen eigenen Server** – alle App-Dateien sind in der App enthalten, sie spricht direkt mit Jellyfin.
 - Die App sendet Anfragen von einem eigenen Ursprung (`capacitor://localhost`) an Jellyfin. Jellyfin erlaubt solche Anfragen standardmäßig (CORS). Falls dein Reverse-Proxy CORS-Header entfernt oder überschreibt, müssen sie dort erlaubt werden.
 - iOS erlaubt standardmäßig nur **HTTPS**-Verbindungen. Für einen reinen HTTP-Server im Heimnetz muss in `ios/App/App/Info.plist` unter `NSAppTransportSecurity` der Schlüssel `NSAllowsLocalNetworking` bzw. `NSAllowsArbitraryLoads` gesetzt werden.
@@ -211,6 +211,9 @@ Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server ein
 - Bei der Anmeldung per Benutzerkonto wird **nicht das Passwort**, sondern nur das von Jellyfin ausgestellte Zugriffstoken gespeichert. Die Anmeldung erscheint im Jellyfin-Dashboard unter **Geräte** und kann dort jederzeit entfernt werden. „Abmelden & Daten löschen“ widerruft das Token auch am Server.
 - Das Token liegt im `localStorage` des Browsers bzw. der App. Dieser Speicher ist **nicht verschlüsselt** – wer Zugriff auf das entsperrte Gerät hat, kann es auslesen.
 - Wird das Token widerrufen, leitet die App automatisch zur Anmeldung zurück.
+- Beim Wechsel von Benutzer oder Server – auch bei der automatischen Anmeldung aus Jellyfin heraus – wird das alte Token zuerst am Server abgemeldet. Es bleiben keine gültigen Tokens zurück, und die Geräteliste im Dashboard wächst nicht.
+- Links mit `?server=…` übernimmt die Web-App nur, wenn sie auf den eigenen Server zeigen; die iPhone-App fragt bei `jellyfinremote://connect?server=…` vorher nach. So kann niemand per präpariertem Link eine fremde Server-Adresse unterschieben.
+- Wird eine Server-Adresse ohne `http://` bzw. `https://` eingegeben, nimmt die App **HTTPS** an.
 - Für den Zugriff von außen ist **HTTPS Pflicht**, sonst würden Passwort und Token unverschlüsselt übertragen.
 - Die vom Plugin ausgelieferten Dateien (`/remote/…`, `/JellyfinRemote/…`) sind ohne Anmeldung abrufbar – sie enthalten nur die App selbst, keine Daten deines Servers. Alles Weitere erfordert die normale Jellyfin-Anmeldung.
 

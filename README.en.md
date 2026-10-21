@@ -59,6 +59,8 @@ The iPhone app needs no server of its own – all files are bundled. Scan the pa
 
 With account sign-in only the access token issued by Jellyfin is stored, never the password. The device shows up in the Jellyfin dashboard and can be revoked there; "Abmelden & Daten löschen" (sign out) also revokes it on the server. `localStorage` is not encrypted. Always use HTTPS for access from outside your home network.
 
+When the user or server changes (including the automatic sign-in from within Jellyfin), the old token is signed out on the server first, so no valid tokens are left behind. Links with `?server=…` are only accepted by the web app if they point to its own server; the iPhone app asks for confirmation before using `jellyfinremote://connect?server=…`. A server address entered without a scheme defaults to HTTPS.
+
 ## Support the project
 
 Development costs time and money (servers, test devices, AI tools). If you like the project, a small donation is very welcome:

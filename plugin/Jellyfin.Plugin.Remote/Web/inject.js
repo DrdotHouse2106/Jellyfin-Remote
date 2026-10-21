@@ -587,8 +587,25 @@
                     next.targetSessionId = config.targetSessionId;
                     next.targetName = config.targetName;
                 }
-                localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
+                // Altes Benutzer-Token (anderer Benutzer oder Server) am Server abmelden, damit keine
+                // gültigen Tokens zurückbleiben und die Geräteliste nicht wächst. API-Schlüssel nie.
+                return revokeOldToken(config, next.token).then(function () {
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
+                });
             });
+    }
+
+    function revokeOldToken(config, newToken) {
+        if (!config.token || config.token === newToken || config.authMode !== 'user') return Promise.resolve();
+        var server = config.serverUrl || SERVER_URL;
+        return fetch(server + '/Sessions/Logout', {
+            method: 'POST',
+            headers: { 'Authorization': 'MediaBrowser Token="' + config.token + '"' }
+        }).then(function (response) {
+            diag('Altes Token der Fernbedienung abgemeldet (' + response.status + ')');
+        }).catch(function () {
+            diag('Altes Token konnte nicht abgemeldet werden (Server nicht erreichbar)');
+        });
     }
 
     var opening = false;
