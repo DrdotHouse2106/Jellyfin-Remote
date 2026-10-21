@@ -145,6 +145,7 @@ Dann in Xcode erneut **▶ Run**.
 ## Lokal testen
 
 ```bash
+npm install          # einmalig, feste Versionen laut package-lock.json
 npm run serve        # oder: python3 -m http.server 8080 --directory app
 ```
 
@@ -216,7 +217,8 @@ Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server ein
 - Wird eine Server-Adresse ohne `http://` bzw. `https://` eingegeben, nimmt die App **HTTPS** an.
 - Für den Zugriff von außen ist **HTTPS Pflicht**, sonst würden Passwort und Token unverschlüsselt übertragen.
 - Die vom Plugin ausgelieferten Dateien (`/remote/…`, `/JellyfinRemote/…`) sind ohne Anmeldung abrufbar – sie enthalten nur die App selbst, keine Daten deines Servers. Auch `GET /JellyfinRemote/Info` verrät keine Einstellungen (etwa die öffentliche Server-Adresse). Alles Weitere erfordert die normale Jellyfin-Anmeldung.
-- Der Release-Workflow baut genau den gepushten Tag, übernimmt die Versionsangabe nur geprüft (Schutz vor eingeschleustem Shell-Code) und nutzt GitHub Actions in fest angegebenen Versionen (Commit-SHA).
+- Der Release-Workflow baut genau den gepushten Tag, übernimmt die Versionsangabe nur geprüft (Schutz vor eingeschleustem Shell-Code) und nutzt GitHub Actions in fest angegebenen Versionen (Commit-SHA). Auch die Werkzeuge für App-Bau und lokalen Test (`@capacitor/assets`, `http-server`) sind mit fester Version in `package.json` eingetragen statt per `npx` nachgeladen.
+- Das Diagnoseprotokoll schreibt nur die Seite ohne Parameter mit, keine Suchbegriffe und keine per SendString übertragenen Texte.
 
 ## Voraussetzungen
 

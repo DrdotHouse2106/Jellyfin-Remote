@@ -51,6 +51,11 @@
         diagQueue.push(new Date().toLocaleTimeString('de-DE') + ' ' + message);
     }
 
+    /** Aktuelle Seite fürs Protokoll – ohne Parameter, damit z. B. Suchbegriffe nicht im Protokoll landen. */
+    function currentPage() {
+        return (location.hash || '#/').split('?')[0];
+    }
+
     function flushDiagnostics() {
         var apiClient = window.ApiClient;
         var token = apiClient && apiClient.accessToken && apiClient.accessToken();
@@ -90,7 +95,7 @@
     if (DIAGNOSTICS) {
         setInterval(flushDiagnostics, 3000);
         window.addEventListener('pagehide', flushDiagnostics);
-        diag('Plugin-Skript geladen · ' + location.hash);
+        diag('Plugin-Skript geladen · ' + currentPage());
     }
 
     // ---------- Steuerung per Fernbedienung (Fokus) ----------
@@ -267,7 +272,7 @@
         var active = document.activeElement;
         var start = isShown(active) ? primaryElement(active) : null;
         var target = start ? findInDirection(start, direction) : firstContentElement();
-        diag('Pfeil ' + direction + ' (Plugin) · Seite ' + (location.hash || '/') + ' · von: ' + describe(start) + (start ? '' : ' → Start im Seiteninhalt'));
+        diag('Pfeil ' + direction + ' (Plugin) · Seite ' + currentPage() + ' · von: ' + describe(start) + (start ? '' : ' → Start im Seiteninhalt'));
         if (target) {
             focusElement(target);
             focusGuard = { target: target, until: Date.now() + 400 };
@@ -319,7 +324,7 @@
         markRemoteNavigation();
         var before = document.activeElement;
         var blocker = ARROWS[name] ? navigationBlocker() : '';
-        diag('Befehl ' + name + ' (Web-Client' + (blocker ? ', weil: ' + blocker : '') + ') · Seite ' + (location.hash || '/') +
+        diag('Befehl ' + name + ' (Web-Client' + (blocker ? ', weil: ' + blocker : '') + ') · Seite ' + currentPage() +
             ' · Fokus vorher: ' + describe(before));
 
         if (before && before !== document.body && !isShown(before)) {
@@ -424,7 +429,11 @@
             return false;
         }
         if (message.MessageType === 'GeneralCommand' || message.MessageType === 'Playstate' || message.MessageType === 'Play') {
-            diag('Empfangen: ' + message.MessageType + ' ' + JSON.stringify(message.Data).slice(0, 200));
+            // Texte von SendString (Suchbegriffe) nicht mitschreiben.
+            var logged = message.Data && message.Data.Name === 'SendString'
+                ? 'SendString (' + String((message.Data.Arguments && message.Data.Arguments.String) || '').length + ' Zeichen)'
+                : JSON.stringify(message.Data).slice(0, 200);
+            diag('Empfangen: ' + message.MessageType + ' ' + logged);
         }
         if (message.MessageType === 'GeneralCommand' && message.Data && message.Data.Name === 'SendString') {
             var text = (message.Data.Arguments && message.Data.Arguments.String) || '';

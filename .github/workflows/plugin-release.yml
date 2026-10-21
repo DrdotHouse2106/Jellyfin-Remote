@@ -137,4 +137,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add jellyfin-repository.json app/js/version.js app/service-worker.js plugin/Jellyfin.Plugin.Remote/Jellyfin.Plugin.Remote.csproj
           git commit -m "Release ${{ steps.version.outputs.version }}"
-          git push origin HEAD:main
+          # Bei einem Tag-Build kann main schon weiter sein – dann den Release-Commit auf main setzen und erneut pushen.
+          for attempt in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "::error::Release-Commit konnte nicht auf main gepusht werden – jellyfin-repository.json ist nicht aktualisiert"
+          exit 1

@@ -3,6 +3,12 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.6
+
+- Datenschutz: Das Diagnoseprotokoll schreibt keine Suchbegriffe mehr mit (Seitenadresse ohne Parameter, SendString nur mit Länge)
+- Release-Workflow: Der Katalog-Eintrag wird auch dann aktualisiert, wenn main nach dem Tag schon weitere Commits hat
+- Werkzeuge für App-Bau und lokalen Test mit fester Version statt `npx --yes`
+
 ## 1.3.5
 
 - Schnellerer Start: Versionierte App-Dateien kommen direkt aus dem Offline-Speicher, ohne jedes Mal beim Server nachzufragen; nur index.html, service-worker.js und manifest.json werden online immer neu geprüft
