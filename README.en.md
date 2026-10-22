@@ -55,6 +55,28 @@ In Xcode select your team under *Signing & Capabilities*, connect your iPhone an
 
 The iPhone app needs no server of its own – all files are bundled. Scan the pairing QR code from the plugin settings to fill in the server URL, or enter it once by hand. iOS only allows HTTPS by default; plain-HTTP servers require an `NSAppTransportSecurity` exception in `Info.plist`.
 
+## Troubleshooting
+
+Common pitfalls during installation and use (symptom → cause → fix). The [German README](README.md#häufige-probleme) has the full list and is kept up to date first.
+
+- **Plugin missing from the catalog / update not offered** – check the repository URL under *Dashboard → Plugins → Repositories*. The combined repository picks up new versions every 15 minutes, and Jellyfin itself only refreshes repositories occasionally; you can run the plugin update task under *Dashboard → Scheduled Tasks*.
+- **`/remote/`, menu entry or settings page missing after install** – restart Jellyfin, then reload open Jellyfin windows (Ctrl + F5); fully close and reopen the Jellyfin mobile app.
+- **Old version still active after an update** – keep only **one** "Jellyfin Remote_…" folder in the `plugins` folder of the Jellyfin data directory and restart Jellyfin.
+- **D-pad takes double steps or only works after reloading** – the controlled Jellyfin window still runs the script of an older plugin version; reload it after every plugin update.
+- **Where is the configuration?** – the plugin settings are stored in `plugins/configurations/Jellyfin.Plugin.Remote.xml` inside the Jellyfin data directory (Docker usually `/config`, Linux package `/var/lib/jellyfin`, Windows `%ProgramData%\Jellyfin\Server`); back up this file or the whole data directory. The remote's own data (server, token, target device) lives only in the phone's browser/app storage – just sign in again on a new device.
+- **No automatic sign-in from Jellyfin** – enable Quick Connect (*Dashboard → General*) or sign in with username and password.
+- **Quick Connect code rejected** – confirm it in an **already signed-in** Jellyfin app (*Settings → Quick Connect*) while it is still shown.
+- **"Link ignoriert: Er verweist auf einen fremden Server"** – the `?server=…` link points to a different server than the one serving the remote (protection against injected servers). Open the remote via your own server's `/remote/` or use the QR code.
+- **"Server nicht erreichbar" / mixed content** – the app runs on HTTPS but the server on HTTP; enter the address with the correct scheme (the app assumes HTTPS when none is given). The iPhone app needs an `Info.plist` exception for plain HTTP.
+- **QR code shows the wrong address** – set the **public URL** in the plugin settings.
+- **A device is missing** – Jellyfin must be open on it. Devices of other users only appear if your account may control them (*Dashboard → Users → Profile → allow remote control of other users / shared devices*).
+- **Device listed but not controllable** – usually the reverse proxy blocks WebSockets (Nginx: add a `location /socket` block with `Upgrade`/`Connection` headers; Nginx Proxy Manager: enable "Websockets Support"). Keep the controlled browser tab in the foreground.
+- **Search results appear on the phone instead of the TV** – enable the "Auf dem Fernseher anzeigen" switch in the remote's search.
+- **Arrow keys behave differently in the browser** – in the TV layout, during playback and in dialogs the Jellyfin web client handles navigation itself; choose the normal layout under *Settings → Display → Layout*.
+- **OSD button does nothing in the browser** – the Jellyfin web client does not implement this command (TV apps do).
+- **Remote icon missing in the header on a computer** – since 1.3.3 it is shown on phones and tablets only; turn off "Symbol nur auf Handys und Tablets" in the plugin settings. The menu entry is always available.
+- **Diagnostics log stays empty** – after enabling it, reload both the remote and the controlled Jellyfin windows. The log is kept in memory only and visible to administrators.
+
 ## Security
 
 With account sign-in only the access token issued by Jellyfin is stored, never the password. The device shows up in the Jellyfin dashboard and can be revoked there; "Abmelden & Daten löschen" (sign out) also revokes it on the server. `localStorage` is not encrypted. Always use HTTPS for access from outside your home network.

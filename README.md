@@ -207,6 +207,94 @@ Jellyfin kann ein Gerät nur fernsteuern, solange zwischen Gerät und Server ein
     ```
   - *Caddy* und *Traefik* reichen WebSockets automatisch durch.
 
+## Häufige Probleme
+
+Hürden, auf die man bei Installation und Nutzung typischerweise stößt – jeweils mit Symptom, Ursache und Lösung. Der Abschnitt wird laufend ergänzt.
+
+### Installation und Updates
+
+**Plugin taucht im Katalog nicht auf**
+- *Ursache:* Repository nicht oder falsch eingetragen, oder Jellyfin hat die Liste noch nicht neu geladen.
+- *Lösung:* Unter **Dashboard → Plugins → Repositories** die URL aus [Installation](#installation) prüfen (sie endet auf `manifest.json` bzw. `jellyfin-repository.json`). Danach die Katalog-Seite neu öffnen.
+
+**Neue Version erscheint nicht als Update**
+- *Ursache:* Das gemeinsame Repository übernimmt neue Versionen zeitversetzt (Prüfung alle 15 Minuten), und Jellyfin fragt Repositories selbst nur gelegentlich ab.
+- *Lösung:* Etwas warten oder unter **Dashboard → Geplante Aufgaben** die Aufgabe zum Aktualisieren der Plugins von Hand starten.
+
+**Nach der Installation fehlen `/remote/`, Menüeintrag oder Einstellungsseite**
+- *Ursache:* Jellyfin lädt Plugins nur beim Start; der Web-Client hält die alte Seite im Speicher.
+- *Lösung:* Jellyfin **neu starten**, danach offene Jellyfin-Fenster neu laden (am Computer **Strg + F5**). Die Jellyfin-App auf Handy/Tablet ganz schließen und neu öffnen.
+
+**Nach einem Update ist noch die alte Version aktiv**
+- *Ursache:* Im Plugin-Ordner von Jellyfin liegen mehrere Versionen (z. B. eine von Hand kopierte und eine aus dem Katalog), oder Jellyfin wurde nach dem Update nicht neu gestartet.
+- *Lösung:* Im Ordner `plugins` des Jellyfin-Datenverzeichnisses darf nur **ein** Ordner „Jellyfin Remote_…“ liegen; ältere löschen, Jellyfin neu starten. Die installierte Version steht unten im Anmeldebildschirm der Fernbedienung und im Dashboard unter **Plugins**.
+
+**Steuerkreuz im Browser macht doppelte Schritte oder reagiert erst nach dem Neuladen**
+- *Ursache:* Das gesteuerte Jellyfin-Fenster läuft noch mit dem Skript einer älteren Plugin-Version.
+- *Lösung:* Nach jedem Plugin-Update die gesteuerten Jellyfin-Fenster (z. B. Browser am Fernseher) einmal neu laden.
+
+### Konfiguration und Sicherung
+
+**Wo liegen die Einstellungen?**
+- *Plugin:* in `plugins/configurations/Jellyfin.Plugin.Remote.xml` im Jellyfin-Datenverzeichnis (Docker meist `/config`, Linux-Paket `/var/lib/jellyfin`, Windows `%ProgramData%\Jellyfin\Server`). Zum Sichern diese Datei kopieren – oder einfach das ganze Datenverzeichnis mitsichern, wie es Jellyfin ohnehin empfiehlt.
+- *Fernbedienung:* Server-Adresse, Token, Zielgerät und Geräte-ID liegen nur im Speicher des Browsers bzw. der App auf dem Handy, nicht auf dem Server. Eine Sicherung ist nicht nötig: Nach einem Geräte- oder Browserwechsel einfach neu anmelden.
+
+**Fernbedienung zurücksetzen**
+- In der Fernbedienung die Verbindungseinstellungen (Anmeldebildschirm) öffnen und **„Abmelden & Daten löschen“** wählen. Das Token wird auch am Server widerrufen.
+- Alte Anmeldungen lassen sich im Dashboard unter **Geräte** entfernen (Name „Jellyfin Remote“).
+
+### Anmeldung
+
+**Kein automatisches Anmelden beim Öffnen aus Jellyfin**
+- *Ursache:* **Quick Connect** ist am Server ausgeschaltet.
+- *Lösung:* Quick Connect einschalten (**Dashboard → Allgemein**) oder normal mit Benutzername und Passwort anmelden.
+
+**Quick-Connect-Code wird nicht angenommen**
+- *Ursache:* Der Code muss in einer **bereits angemeldeten** Jellyfin-App bestätigt werden und gilt nur kurz.
+- *Lösung:* In Jellyfin (Browser oder App) **Einstellungen → Quick Connect** öffnen und den Code eingeben, solange er in der Fernbedienung angezeigt wird.
+
+**Meldung „Link ignoriert: Er verweist auf einen fremden Server“**
+- *Ursache:* Der Link enthält `?server=…` mit einer anderen Adresse als der, unter der die Fernbedienung läuft. Das ist ein Schutz gegen untergeschobene Server.
+- *Lösung:* Die Fernbedienung über die Adresse des eigenen Servers öffnen (`…/remote/`) oder den QR-Code aus den Plugin-Einstellungen nutzen.
+
+**„Server nicht erreichbar“ bzw. Hinweis auf „Mixed Content“**
+- *Ursache:* Die Fernbedienung läuft über HTTPS, der Server aber über HTTP; Browser blockieren das. Ohne Angabe nimmt die App außerdem HTTPS an.
+- *Lösung:* Die Server-Adresse mit dem richtigen Schema (`http://` oder `https://`) eintragen. Für den Zugriff von außen den Server per HTTPS erreichbar machen. Die iPhone-App braucht für reines HTTP eine Ausnahme in der `Info.plist` (siehe [Hinweise zur nativen App](#hinweise-zur-nativen-app)).
+
+**QR-Code in den Plugin-Einstellungen enthält die falsche Adresse**
+- *Ursache:* Das Dashboard wurde über eine interne Adresse aufgerufen.
+- *Lösung:* In den Plugin-Einstellungen die **öffentliche Adresse** des Servers eintragen.
+
+### Geräte und Steuerung
+
+**Ein Gerät fehlt in der Liste**
+- *Ursache:* Jellyfin ist auf dem Gerät nicht geöffnet, oder es gehört einem anderen Benutzer.
+- *Lösung:* Jellyfin auf dem Gerät starten. Geräte anderer Benutzer zeigt Jellyfin nur, wenn das eigene Benutzerkonto sie steuern darf (**Dashboard → Benutzer → Profil → „Fernsteuerung anderer Benutzer erlauben“** bzw. **„… gemeinsam genutzter Geräte …“**).
+
+**Gerät steht in der Liste, ist aber „nicht steuerbar“ oder reagiert nicht**
+- *Ursache:* Meist blockiert der Reverse-Proxy die Live-Verbindung (WebSocket), seltener schläft das Gerät oder der Browser-Tab ist im Hintergrund.
+- *Lösung:* Siehe [Gerät „nicht steuerbar“?](#gerät-nicht-steuerbar) – bei Nginx den `location /socket`-Block ergänzen. Den Jellyfin-Tab am gesteuerten Gerät im Vordergrund lassen.
+
+**Suchergebnisse erscheinen auf dem Handy statt auf dem Fernseher**
+- *Lösung:* In der Suche der Fernbedienung den Schalter **„Auf dem Fernseher anzeigen“** einschalten. Dann wird der Suchbegriff an das Zielgerät übertragen, und auf dem Handy bleibt ein kleines Steuerkreuz.
+
+**Pfeiltasten verhalten sich im Browser anders als erwartet**
+- *Ursache:* Im **TV-Layout**, während der Wiedergabe und in Dialogen übernimmt der Jellyfin-Web-Client die Navigation selbst.
+- *Lösung:* Für die Kachel-Navigation des Plugins in Jellyfin unter **Einstellungen → Anzeige → Layout** das normale Layout (Desktop/Mobil) wählen.
+
+**Taste für die Bildschirmanzeige (OSD) bewirkt im Browser nichts**
+- *Ursache:* Der Jellyfin-Web-Client setzt diesen Befehl nicht um. In den TV-Apps funktioniert er.
+
+**Fernbedienungs-Symbol in der Kopfzeile fehlt am Computer**
+- *Ursache:* Seit Version 1.3.3 erscheint das Symbol standardmäßig nur auf Handys und Tablets.
+- *Lösung:* In den Plugin-Einstellungen **„Symbol nur auf Handys und Tablets“** ausschalten. Der Menüeintrag „Fernbedienung“ ist unabhängig davon immer da.
+
+### Fehlersuche
+
+**Diagnoseprotokoll bleibt leer**
+- *Ursache:* Die Fenster laufen noch ohne die Protokollierung.
+- *Lösung:* Nach dem Einschalten sowohl die Fernbedienung als auch die gesteuerten Jellyfin-Fenster neu laden. Das Protokoll liegt nur im Arbeitsspeicher und ist nach einem Neustart von Jellyfin leer. Lesen können es nur Administratoren.
+
 ## Sicherheit
 
 - Bei der Anmeldung per Benutzerkonto wird **nicht das Passwort**, sondern nur das von Jellyfin ausgestellte Zugriffstoken gespeichert. Die Anmeldung erscheint im Jellyfin-Dashboard unter **Geräte** und kann dort jederzeit entfernt werden. „Abmelden & Daten löschen“ widerruft das Token auch am Server.
