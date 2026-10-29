@@ -51,7 +51,11 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      // Nur eigene Caches löschen: Die Herkunft teilt sich die App mit dem Jellyfin-Web-Client,
+      // dessen Zwischenspeicher sonst bei jedem Update mit verschwinden würde.
+      .then((keys) => Promise.all(
+        keys.filter((key) => key.startsWith('jellyfin-remote-') && key !== CACHE_NAME).map((key) => caches.delete(key)),
+      ))
       .then(() => self.clients.claim()),
   );
 });
@@ -60,11 +64,15 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Nur GET-Anfragen der eigenen Herkunft behandeln – alles andere (Jellyfin-API) geht direkt ans Netz.
+  // Nur GET-Anfragen der eigenen Herkunft behandeln – alles andere geht direkt ans Netz.
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   const scope = self.registration.scope;
   const relative = url.href.startsWith(scope) ? url.href.slice(scope.length) : null;
+
+  // Außerhalb von …/remote/ liegt die Jellyfin-API (beim Plugin auf derselben Herkunft):
+  // Sitzungen, Suchergebnisse und Bilder nie zwischenspeichern – sie müssen live sein.
+  if (relative === null) return;
 
   // Versionierte Pfade (…/remote/v1.2.3/js/app.js) ändern sich nie – das Plugin liefert sie als
   // „immutable“ aus. Darum Zwischenspeicher zuerst, ohne beim Server nachzufragen. Der Schlüssel

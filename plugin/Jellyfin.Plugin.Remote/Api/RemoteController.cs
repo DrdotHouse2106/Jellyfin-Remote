@@ -95,6 +95,13 @@ public class RemoteController : ControllerBase
             html = html.Insert(headIndex + "<head>".Length, baseTag);
         }
 
+        // Das Manifest unversioniert einbinden: start_url und scope ("./") zeigen dann auf /remote/
+        // statt auf /remote/v{Version}/ – eine installierte PWA bleibt so auch nach Updates gültig.
+        html = html.Replace(
+            "<link rel=\"manifest\" href=\"manifest.json\">",
+            $"<link rel=\"manifest\" href=\"{Request.PathBase}/remote/manifest.json\">",
+            StringComparison.Ordinal);
+
         Response.Headers.CacheControl = "no-cache";
         return Content(html, "text/html; charset=utf-8");
     }

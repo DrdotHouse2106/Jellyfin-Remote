@@ -75,6 +75,7 @@ Common pitfalls during installation and use (symptom → cause → fix). The [Ge
 - **Arrow keys behave differently in the browser** – in the TV layout, during playback and in dialogs the Jellyfin web client handles navigation itself; choose the normal layout under *Settings → Display → Layout*.
 - **OSD button does nothing in the browser** – the Jellyfin web client does not implement this command (TV apps do).
 - **Remote icon missing in the header on a computer** – since 1.3.3 it is shown on phones and tablets only; turn off "Symbol nur auf Handys und Tablets" in the plugin settings. The menu entry is always available.
+- **Installed home-screen app opens with a browser bar after an update** – versions before 1.3.7 installed it under the versioned path; remove it once and add it again.
 - **Diagnostics log stays empty** – after enabling it, reload both the remote and the controlled Jellyfin windows. The log is kept in memory only and visible to administrators.
 
 ## Security

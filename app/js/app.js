@@ -147,6 +147,9 @@ function createApi(serverUrl, token) {
     // Token wurde widerrufen oder ist ungültig → zur Anmeldung zurück.
     onUnauthorized: () => {
       if (app.currentView === 'setup') return;
+      // Ungültiges Token verwerfen – sonst würde die App beim nächsten Start wieder damit
+      // verbinden und sofort erneut zur Anmeldung springen.
+      app.config = saveConfig({ token: null });
       toast('Sitzung abgelaufen – bitte erneut anmelden.', 'error');
       app.show('setup');
     },

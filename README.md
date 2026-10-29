@@ -289,6 +289,10 @@ Hürden, auf die man bei Installation und Nutzung typischerweise stößt – jew
 - *Ursache:* Seit Version 1.3.3 erscheint das Symbol standardmäßig nur auf Handys und Tablets.
 - *Lösung:* In den Plugin-Einstellungen **„Symbol nur auf Handys und Tablets“** ausschalten. Der Menüeintrag „Fernbedienung“ ist unabhängig davon immer da.
 
+**Installierte Web-App (Home-Bildschirm) öffnet sich nach einem Update mit Browser-Leiste**
+- *Ursache:* Versionen vor 1.3.7 haben die App unter dem versionierten Pfad (`/remote/v…/`) installiert.
+- *Lösung:* Einmal vom Home-Bildschirm entfernen und neu hinzufügen; ab 1.3.7 bleibt sie über Updates hinweg gültig.
+
 ### Fehlersuche
 
 **Diagnoseprotokoll bleibt leer**

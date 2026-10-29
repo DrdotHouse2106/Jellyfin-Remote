@@ -3,6 +3,14 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.7
+
+- Offline-Speicher der App speichert keine Jellyfin-Daten mehr (Sitzungen, Suchergebnisse, Bilder) – ohne Verbindung erscheinen keine veralteten Geräte mehr als „online“
+- Ein Update der Fernbedienung löscht nicht mehr den Zwischenspeicher des Jellyfin-Web-Clients
+- Abgelaufene oder widerrufene Anmeldung wird verworfen, statt beim nächsten Start erneut zur Anmeldung zu springen
+- Menü: Bibliotheken erscheinen auch, wenn am Fernseher ein anderer Benutzer angemeldet ist (dann die eigenen Bibliotheken)
+- Auf dem Home-Bildschirm installierte Web-App bleibt nach Updates gültig (Manifest zeigt auf `/remote/` statt auf den versionierten Pfad)
+
 ## 1.3.6
 
 - Datenschutz: Das Diagnoseprotokoll schreibt keine Suchbegriffe mehr mit (Seitenadresse ohne Parameter, SendString nur mit Länge)

@@ -93,9 +93,18 @@ export function initMenuView(app) {
   }
 
   async function renderLibraries(session) {
-    const userId = session?.UserId ?? app.config.userId;
-    if (!userId) return fill(libraries, []);
-    const views = (await app.api.getUserViews(userId)).Items ?? [];
+    // Bibliotheken des am Fernseher angemeldeten Benutzers. Gehört der einem anderen Konto,
+    // verweigert Jellyfin Nicht-Admins den Zugriff (403) – dann die eigenen Bibliotheken zeigen.
+    const ownUserId = app.config.userId;
+    const tvUserId = session?.UserId ?? ownUserId;
+    if (!tvUserId) return fill(libraries, []);
+    let views;
+    try {
+      views = (await app.api.getUserViews(tvUserId)).Items ?? [];
+    } catch (err) {
+      if (err.status !== 403 || !ownUserId || ownUserId === tvUserId) throw err;
+      views = (await app.api.getUserViews(ownUserId)).Items ?? [];
+    }
     fill(
       libraries,
       views.map((view) =>
