@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/DrdotHouse2106/Jellyfin-Remote/main/app/icons/icon-512.png",
     "versions": [
       {
+        "version": "1.3.7.0",
+        "changelog": "- Offline-Speicher der App speichert keine Jellyfin-Daten mehr (Sitzungen, Suchergebnisse, Bilder) – ohne Verbindung erscheinen keine veralteten Geräte mehr als „online“\n- Ein Update der Fernbedienung löscht nicht mehr den Zwischenspeicher des Jellyfin-Web-Clients\n- Abgelaufene oder widerrufene Anmeldung wird verworfen, statt beim nächsten Start erneut zur Anmeldung zu springen\n- Menü: Bibliotheken erscheinen auch, wenn am Fernseher ein anderer Benutzer angemeldet ist (dann die eigenen Bibliotheken)\n- Auf dem Home-Bildschirm installierte Web-App bleibt nach Updates gültig (Manifest zeigt auf `/remote/` statt auf den versionierten Pfad)",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/DrdotHouse2106/Jellyfin-Remote/releases/download/v1.3.7/jellyfin-remote_1.3.7.0.zip",
+        "checksum": "5fe3ba54a40c1c4870cf91641a83c83b",
+        "timestamp": "2026-10-29T07:04:16Z"
+      },
+      {
         "version": "1.3.6.0",
         "changelog": "- Datenschutz: Das Diagnoseprotokoll schreibt keine Suchbegriffe mehr mit (Seitenadresse ohne Parameter, SendString nur mit Länge)\n- Release-Workflow: Der Katalog-Eintrag wird auch dann aktualisiert, wenn main nach dem Tag schon weitere Commits hat\n- Werkzeuge für App-Bau und lokalen Test mit fester Version statt `npx --yes`",
         "targetAbi": "12.2.0.0",
