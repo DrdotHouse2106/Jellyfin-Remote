@@ -12,7 +12,7 @@
  */
 
 // Wird beim Plugin-Release automatisch auf die Versionsnummer gesetzt.
-const CACHE_NAME = 'jellyfin-remote-1.3.7';
+const CACHE_NAME = 'jellyfin-remote-1.3.8';
 
 const APP_SHELL = [
   './',
