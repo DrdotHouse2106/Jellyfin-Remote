@@ -25,6 +25,15 @@ export async function initDiagnostics(jellyfinApi) {
   }
 }
 
+/** Beendet das Protokoll (z. B. wenn das Token ungültig wurde) und verwirft offene Einträge. */
+export function stopDiagnostics() {
+  clearInterval(timer);
+  timer = null;
+  enabled = false;
+  api = null;
+  queue.length = 0;
+}
+
 export function log(message) {
   if (!enabled) return;
   queue.push(`${new Date().toLocaleTimeString('de-DE')} ${message}`);

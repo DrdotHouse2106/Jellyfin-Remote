@@ -74,6 +74,11 @@ self.addEventListener('fetch', (event) => {
   // Sitzungen, Suchergebnisse und Bilder nie zwischenspeichern – sie müssen live sein.
   if (relative === null) return;
 
+  // Nur bekannte App-Dateien behandeln. Liegt die App im Wurzelverzeichnis (ohne Plugin),
+  // umfasst der Bereich die ganze Herkunft – Jellyfin-Anfragen dürfen trotzdem nie in den Cache.
+  const appPath = relative.split(/[?#]/)[0];
+  if (!/^(v\d[^/]*\/)?(index\.html|manifest\.json|service-worker\.js|(css|js|icons)\/[^?#]+)?$/.test(appPath)) return;
+
   // Versionierte Pfade (…/remote/v1.2.3/js/app.js) ändern sich nie – das Plugin liefert sie als
   // „immutable“ aus. Darum Zwischenspeicher zuerst, ohne beim Server nachzufragen. Der Schlüssel
   // enthält die Version, damit nach einem Update nie eine alte Datei unter neuer Adresse erscheint.

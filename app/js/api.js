@@ -251,7 +251,7 @@ export class JellyfinApi {
     if (!tag) return null;
 
     const params = new URLSearchParams({ fillHeight: height, quality: 85, tag });
-    return `${this.serverUrl}/Items/${id}/Images/Primary?${params}`;
+    return `${this.serverUrl}/Items/${encodeURIComponent(id)}/Images/Primary?${params}`;
   }
 
   /** Bibliotheken des Benutzers (Filme, Serien, Live-TV, …). */
@@ -273,7 +273,7 @@ export class JellyfinApi {
 
   /** Startet ein Element sofort auf dem Zielgerät (PlayCommand=PlayNow). */
   play(sessionId, itemId) {
-    return this.request(`/Sessions/${sessionId}/Playing`, {
+    return this.request(`/Sessions/${encodeURIComponent(sessionId)}/Playing`, {
       method: 'POST',
       query: { playCommand: 'PlayNow', itemIds: itemId },
     });
@@ -281,17 +281,17 @@ export class JellyfinApi {
 
   /** Wiedergabesteuerung: PlayPause, Pause, Unpause, Stop, Seek, … */
   playstate(sessionId, command, query) {
-    return this.request(`/Sessions/${sessionId}/Playing/${command}`, { method: 'POST', query });
+    return this.request(`/Sessions/${encodeURIComponent(sessionId)}/Playing/${encodeURIComponent(command)}`, { method: 'POST', query });
   }
 
   /** Allgemeiner Befehl ohne Argumente: MoveUp, MoveDown, Select, Back, GoHome, ToggleMute, … */
   sendGeneralCommand(sessionId, command) {
-    return this.request(`/Sessions/${sessionId}/Command/${command}`, { method: 'POST' });
+    return this.request(`/Sessions/${encodeURIComponent(sessionId)}/Command/${encodeURIComponent(command)}`, { method: 'POST' });
   }
 
   /** Allgemeiner Befehl mit Argumenten, z. B. SendString { String: 'Text' }. */
   sendCommand(sessionId, name, args = {}) {
-    return this.request(`/Sessions/${sessionId}/Command`, {
+    return this.request(`/Sessions/${encodeURIComponent(sessionId)}/Command`, {
       method: 'POST',
       body: { Name: name, Arguments: args },
     });
@@ -299,7 +299,7 @@ export class JellyfinApi {
 
   /** Setzt die Lautstärke (0–100) auf dem Zielgerät. */
   setVolume(sessionId, volume) {
-    return this.request(`/Sessions/${sessionId}/Command`, {
+    return this.request(`/Sessions/${encodeURIComponent(sessionId)}/Command`, {
       method: 'POST',
       body: { Name: 'SetVolume', Arguments: { Volume: String(Math.round(volume)) } },
     });

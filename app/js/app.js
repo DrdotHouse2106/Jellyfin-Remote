@@ -11,7 +11,7 @@ import { initSessionsView } from './views/sessions.js';
 import { initRemoteView } from './views/remote.js';
 import { initSearchView } from './views/search.js';
 import { initMenuView } from './views/menu.js';
-import { initDiagnostics } from './diagnostics.js';
+import { initDiagnostics, stopDiagnostics } from './diagnostics.js';
 
 /** Ansichten, in denen Kopfzeile bzw. Tab-Leiste sichtbar sind. */
 const WITH_TOPBAR = ['sessions', 'remote', 'menu', 'search'];
@@ -152,6 +152,9 @@ function createApi(serverUrl, token) {
       // Eine späte 401-Antwort eines alten Tokens darf eine neue Anmeldung nicht löschen.
       if (app.config.token !== token) return;
       app.config = saveConfig({ token: null });
+      // Mit dem toten Token keine weiteren Anfragen schicken (Diagnose-Timer, API-Client).
+      stopDiagnostics();
+      app.api = null;
       toast('Sitzung abgelaufen – bitte erneut anmelden.', 'error');
       app.show('setup');
     },
@@ -196,7 +199,8 @@ function applyServerLink(link) {
   // Schutz vor untergeschobenen Links (Phishing): Im Browser nur den eigenen Server akzeptieren,
   // in der nativen App vorher nachfragen.
   if (isNativeApp) {
-    if (!confirm(`Mit dem Server „${server}“ verbinden?\n\nNur bestätigen, wenn das dein Jellyfin-Server ist.`)) return false;
+    const host = new URL(server).host;
+    if (!confirm(`Mit diesem Server verbinden?\n\n▶ ${host} ◀\n\n(${server})\n\nNur bestätigen, wenn das dein Jellyfin-Server ist.`)) return false;
   } else if (server !== ownServerUrl()) {
     toast('Link ignoriert: Er verweist auf einen fremden Server.', 'error');
     return false;

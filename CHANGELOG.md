@@ -3,6 +3,13 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.9
+
+- Nach einer abgelaufenen Anmeldung schickt die Fernbedienung keine weiteren Anfragen mit dem ungültigen Token (Diagnose-Timer und API-Client werden beendet)
+- Offline-Speicher behandelt nur noch bekannte App-Dateien – auch wenn die App ohne Plugin im Wurzelverzeichnis einer Adresse liegt
+- iPhone-App: Beim Verbinden per Link wird der Server-Name deutlich hervorgehoben
+- Geräte- und Element-IDs werden in Adressen korrekt kodiert
+
 ## 1.3.8
 
 - Sicherheit: Diagnoseprotokoll entfernt Zeilenumbrüche und Steuerzeichen aus Einträgen (keine gefälschten Zeilen), begrenzt Anfragen je Benutzer (60 pro Minute) und lehnt fehlerhafte Anfragen mit 400 statt 500 ab
