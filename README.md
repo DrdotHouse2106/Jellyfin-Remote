@@ -137,7 +137,7 @@ Dann in Xcode erneut **▶ Run**.
 - **Kopplung mit dem Plugin:** In den Plugin-Einstellungen den QR-Code „In der iPhone-App verbinden“ mit der Kamera scannen – die App öffnet sich und die Server-URL ist eingetragen (URL-Schema `jellyfinremote://connect?server=…`; die App fragt vor dem Übernehmen nach). Ohne Plugin gibst du die Server-URL einmalig von Hand ein.
 - Die iPhone-App braucht **keinen eigenen Server** – alle App-Dateien sind in der App enthalten, sie spricht direkt mit Jellyfin.
 - Die App sendet Anfragen von einem eigenen Ursprung (`capacitor://localhost`) an Jellyfin. Jellyfin erlaubt solche Anfragen standardmäßig (CORS). Falls dein Reverse-Proxy CORS-Header entfernt oder überschreibt, müssen sie dort erlaubt werden.
-- iOS erlaubt standardmäßig nur **HTTPS**-Verbindungen. Für einen reinen HTTP-Server im Heimnetz muss in `ios/App/App/Info.plist` unter `NSAppTransportSecurity` der Schlüssel `NSAllowsLocalNetworking` bzw. `NSAllowsArbitraryLoads` gesetzt werden.
+- iOS erlaubt standardmäßig nur **HTTPS**-Verbindungen. Für einen reinen HTTP-Server im Heimnetz muss in `ios/App/App/Info.plist` unter `NSAppTransportSecurity` eine Ausnahme eingetragen werden – möglichst eng: `NSAllowsLocalNetworking` (nur Adressen im lokalen Netz) oder `NSExceptionDomains` für genau den eigenen Server. `NSAllowsArbitraryLoads` schaltet den Schutz für **alle** Verbindungen ab und sollte nicht verwendet werden. Besser noch: den Server auch intern per HTTPS erreichbar machen.
 - Der Ordner `ios/` wird lokal erzeugt und ist per `.gitignore` ausgeschlossen. Wer ihn versionieren möchte, entfernt den Eintrag.
 
 ---
@@ -259,7 +259,7 @@ Hürden, auf die man bei Installation und Nutzung typischerweise stößt – jew
 
 **„Server nicht erreichbar“ bzw. Hinweis auf „Mixed Content“**
 - *Ursache:* Die Fernbedienung läuft über HTTPS, der Server aber über HTTP; Browser blockieren das. Ohne Angabe nimmt die App außerdem HTTPS an.
-- *Lösung:* Die Server-Adresse mit dem richtigen Schema (`http://` oder `https://`) eintragen. Für den Zugriff von außen den Server per HTTPS erreichbar machen. Die iPhone-App braucht für reines HTTP eine Ausnahme in der `Info.plist` (siehe [Hinweise zur nativen App](#hinweise-zur-nativen-app)).
+- *Lösung:* Die Server-Adresse mit dem richtigen Schema (`http://` oder `https://`) eintragen. Für den Zugriff von außen den Server per HTTPS erreichbar machen. Die iPhone-App braucht für reines HTTP eine eng gefasste Ausnahme in der `Info.plist` (`NSAllowsLocalNetworking` oder `NSExceptionDomains`) (siehe [Hinweise zur nativen App](#hinweise-zur-nativen-app)).
 
 **QR-Code in den Plugin-Einstellungen enthält die falsche Adresse**
 - *Ursache:* Das Dashboard wurde über eine interne Adresse aufgerufen.

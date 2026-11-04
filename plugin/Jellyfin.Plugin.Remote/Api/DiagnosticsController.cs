@@ -1,5 +1,6 @@
 using MediaBrowser.Common.Api;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jellyfin.Plugin.Remote.Api;
@@ -17,14 +18,28 @@ public class DiagnosticsController : ControllerBase
     /// <param name="batch">Einträge.</param>
     /// <returns>204 No Content.</returns>
     [HttpPost]
-    public IActionResult Add([FromBody] DiagnosticsBatch batch)
+    public IActionResult Add([FromBody] DiagnosticsBatch? batch)
     {
-        if (Plugin.Instance?.Configuration.EnableDiagnostics == true && batch.Lines.Count > 0)
+        if (batch?.Lines is null)
         {
-            var source = string.IsNullOrWhiteSpace(batch.Source) ? "?" : batch.Source.Trim();
-            DiagnosticsLog.Add(source.Length > 60 ? source[..60] : source, batch.Lines);
+            return BadRequest();
         }
 
+        if (Plugin.Instance?.Configuration.EnableDiagnostics != true || batch.Lines.Count == 0)
+        {
+            return NoContent();
+        }
+
+        // Begrenzung je Benutzer, damit niemand das Protokoll fluten kann.
+        var user = User.FindFirst("Jellyfin-UserId")?.Value
+            ?? HttpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "?";
+        if (!DiagnosticsLog.TryAcquire(user))
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests);
+        }
+
+        DiagnosticsLog.Add(batch.Source, batch.Lines);
         return NoContent();
     }
 

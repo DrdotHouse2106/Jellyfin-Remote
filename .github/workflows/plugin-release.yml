@@ -141,7 +141,11 @@ jobs:
           for attempt in 1 2 3; do
             git push origin HEAD:main && exit 0
             git fetch origin main
-            git rebase origin/main
+            if ! git rebase origin/main; then
+              git rebase --abort
+              echo "::error::Release-Commit lässt sich nicht konfliktfrei auf main setzen – jellyfin-repository.json ist nicht aktualisiert"
+              exit 1
+            fi
           done
           echo "::error::Release-Commit konnte nicht auf main gepusht werden – jellyfin-repository.json ist nicht aktualisiert"
           exit 1

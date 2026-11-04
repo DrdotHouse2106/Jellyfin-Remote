@@ -148,7 +148,9 @@ function createApi(serverUrl, token) {
     onUnauthorized: () => {
       if (app.currentView === 'setup') return;
       // Ungültiges Token verwerfen – sonst würde die App beim nächsten Start wieder damit
-      // verbinden und sofort erneut zur Anmeldung springen.
+      // verbinden und sofort erneut zur Anmeldung springen. Nur wenn es noch das gespeicherte ist:
+      // Eine späte 401-Antwort eines alten Tokens darf eine neue Anmeldung nicht löschen.
+      if (app.config.token !== token) return;
       app.config = saveConfig({ token: null });
       toast('Sitzung abgelaufen – bitte erneut anmelden.', 'error');
       app.show('setup');

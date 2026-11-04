@@ -53,7 +53,7 @@ npm run ios:open     # opens Xcode
 
 In Xcode select your team under *Signing & Capabilities*, connect your iPhone and press **Run**. After code changes run `npm run ios:sync`. A free Apple ID lets you run the app on your own device for 7 days at a time; the Apple Developer Program removes that limit and enables TestFlight/App Store.
 
-The iPhone app needs no server of its own – all files are bundled. Scan the pairing QR code from the plugin settings to fill in the server URL, or enter it once by hand. iOS only allows HTTPS by default; plain-HTTP servers require an `NSAppTransportSecurity` exception in `Info.plist`.
+The iPhone app needs no server of its own – all files are bundled. Scan the pairing QR code from the plugin settings to fill in the server URL, or enter it once by hand. iOS only allows HTTPS by default; plain-HTTP servers require a narrow `NSAppTransportSecurity` exception in `Info.plist` (`NSAllowsLocalNetworking` or `NSExceptionDomains` for your server) – avoid `NSAllowsArbitraryLoads`, or better serve HTTPS internally too.
 
 ## Troubleshooting
 
@@ -67,7 +67,7 @@ Common pitfalls during installation and use (symptom → cause → fix). The [Ge
 - **No automatic sign-in from Jellyfin** – enable Quick Connect (*Dashboard → General*) or sign in with username and password.
 - **Quick Connect code rejected** – confirm it in an **already signed-in** Jellyfin app (*Settings → Quick Connect*) while it is still shown.
 - **"Link ignoriert: Er verweist auf einen fremden Server"** – the `?server=…` link points to a different server than the one serving the remote (protection against injected servers). Open the remote via your own server's `/remote/` or use the QR code.
-- **"Server nicht erreichbar" / mixed content** – the app runs on HTTPS but the server on HTTP; enter the address with the correct scheme (the app assumes HTTPS when none is given). The iPhone app needs an `Info.plist` exception for plain HTTP.
+- **"Server nicht erreichbar" / mixed content** – the app runs on HTTPS but the server on HTTP; enter the address with the correct scheme (the app assumes HTTPS when none is given). The iPhone app needs a narrow `Info.plist` exception for plain HTTP (`NSAllowsLocalNetworking` / `NSExceptionDomains`).
 - **QR code shows the wrong address** – set the **public URL** in the plugin settings.
 - **A device is missing** – Jellyfin must be open on it. Devices of other users only appear if your account may control them (*Dashboard → Users → Profile → allow remote control of other users / shared devices*).
 - **Device listed but not controllable** – usually the reverse proxy blocks WebSockets (Nginx: add a `location /socket` block with `Upgrade`/`Connection` headers; Nginx Proxy Manager: enable "Websockets Support"). Keep the controlled browser tab in the foreground.

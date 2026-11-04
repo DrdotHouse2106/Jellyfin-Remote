@@ -3,6 +3,13 @@
 Die Einträge unter einer Versionsnummer erscheinen beim Release automatisch in Jellyfin
 (Dashboard → Plugins → Jellyfin Remote → Versionsverlauf).
 
+## 1.3.8
+
+- Sicherheit: Diagnoseprotokoll entfernt Zeilenumbrüche und Steuerzeichen aus Einträgen (keine gefälschten Zeilen), begrenzt Anfragen je Benutzer (60 pro Minute) und lehnt fehlerhafte Anfragen mit 400 statt 500 ab
+- Eine späte Ablehnung eines alten Tokens löscht keine neue Anmeldung mehr
+- Release-Workflow bricht bei einem Konflikt mit main mit Fehler ab, statt grün zu enden
+- README: Für reines HTTP in der iPhone-App eng gefasste Ausnahmen statt `NSAllowsArbitraryLoads`
+
 ## 1.3.7
 
 - Offline-Speicher der App speichert keine Jellyfin-Daten mehr (Sitzungen, Suchergebnisse, Bilder) – ohne Verbindung erscheinen keine veralteten Geräte mehr als „online“

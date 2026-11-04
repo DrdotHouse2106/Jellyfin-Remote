@@ -6,8 +6,8 @@ namespace Jellyfin.Plugin.Remote.Api;
 public class DiagnosticsBatch
 {
     /// <summary>Gets or sets die Herkunft, z. B. „Fernbedienung“.</summary>
-    public string Source { get; set; } = string.Empty;
+    public string? Source { get; set; }
 
     /// <summary>Gets or sets die Einträge.</summary>
-    public List<string> Lines { get; set; } = new();
+    public List<string?>? Lines { get; set; }
 }
